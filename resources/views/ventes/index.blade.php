@@ -1,0 +1,134 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <p class="eyebrow mb-1 text-muted">Ventes & Caisse</p>
+                <h1 class="h3 mb-0">Gestion des Ventes</h1>
+            </div>
+            <div>
+                <a class="btn btn-primary btn-sm" href="{{ route('ventes.create') }}">
+                    <i class="bi bi-cart-plus me-1"></i> Nouvelle Vente / Caisse
+                </a>
+            </div>
+        </div>
+    </x-slot>
+
+    {{-- Flash Messages --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Metric Cards --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-4">
+            <div class="card card-body border-0 shadow-sm h-100">
+                <span class="text-muted small fw-semibold">Total Ventes Réalisées</span>
+                <h3 class="fw-bold mb-0 mt-1">{{ $totalVentesCount }}</h3>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="card card-body border-0 shadow-sm h-100">
+                <span class="text-muted small fw-semibold">Ventes du Jour</span>
+                <h3 class="fw-bold mb-0 mt-1 text-primary">{{ number_format($ventesAujourdhui, 0, ',', ' ') }} FCFA</h3>
+            </div>
+        </div>
+        <div class="col-12 col-sm-4">
+            <div class="card card-body border-0 shadow-sm h-100">
+                <span class="text-muted small fw-semibold">Chiffre d'Affaires Global</span>
+                <h3 class="fw-bold mb-0 mt-1 text-success">{{ number_format($totalChiffreAffaires, 0, ',', ' ') }} FCFA</h3>
+            </div>
+        </div>
+    </div>
+
+    {{-- Panel --}}
+    <section class="panel">
+        <div class="panel-header flex-column flex-md-row align-items-start align-items-md-center gap-3">
+            <div>
+                <h2 class="h5 mb-1 section-title"><i class="bi bi-cart-check me-2"></i>Journal des Ventes</h2>
+                <p class="text-muted mb-0">Historique des encaissements et des reçus délivrés aux clients.</p>
+            </div>
+            <div>
+                <form method="GET" action="{{ route('ventes.index') }}" class="row g-2">
+                    <div class="col-auto">
+                        <input class="form-control form-control-sm table-search" type="search" name="search" placeholder="N° ticket, client..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-auto">
+                        <select class="form-select form-select-sm" name="statut">
+                            <option value="">Tous les statuts</option>
+                            <option value="PAYEE" {{ request('statut') === 'PAYEE' ? 'selected' : '' }}>Payée</option>
+                            <option value="EN_ATTENTE" {{ request('statut') === 'EN_ATTENTE' ? 'selected' : '' }}>En attente</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>N° Ticket / Facture</th>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Vendeur</th>
+                        <th>Paiement</th>
+                        <th>Total Vente</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($ventes as $v)
+                        <tr>
+                            <td><a href="{{ route('ventes.show', $v) }}" class="fw-bold text-decoration-none">{{ $v->numero }}</a></td>
+                            <td>{{ $v->date->format('d/m/Y H:i') }}</td>
+                            <td>{{ $v->client ? $v->client->nom . ' ' . $v->client->prenom : 'Client Comptant' }}</td>
+                            <td>{{ $v->user->name }}</td>
+                            <td>
+                                @php $p = $v->paiements->first(); @endphp
+                                <span class="badge bg-light text-body border">{{ $p ? $p->mode : '—' }}</span>
+                            </td>
+                            <td class="fw-bold text-success">{{ number_format($v->total, 0, ',', ' ') }} FCFA</td>
+                            <td>
+                                @if($v->statut->value === 'PAYEE' || $v->statut === \App\Enums\StatutVente::PAYEE)
+                                    <span class="badge bg-success">Payée</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">En attente</span>
+                                @endif
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route('ventes.show', $v) }}" class="btn btn-outline-primary btn-sm" title="Imprimer le Reçu">
+                                    <i class="bi bi-receipt"></i> Voir Reçu
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Aucune vente enregistrée.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($ventes->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
+                <span class="text-muted small">Affichage de {{ $ventes->firstItem() }} à {{ $ventes->lastItem() }} sur {{ $ventes->total() }}</span>
+                {{ $ventes->links() }}
+            </div>
+        @endif
+    </section>
+</x-app-layout>

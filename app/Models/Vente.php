@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\StatutVente;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Vente extends Model
+{
+    use HasFactory, HasUlids;
+
+    protected $fillable = [
+        'client_id',
+        'user_id',
+        'numero',
+        'date',
+        'sous_total',
+        'remise',
+        'tva',
+        'total',
+        'montant_paye',
+        'monnaie',
+        'statut',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'date' => 'datetime',
+            'sous_total' => 'decimal:2',
+            'remise' => 'decimal:2',
+            'tva' => 'decimal:2',
+            'total' => 'decimal:2',
+            'montant_paye' => 'decimal:2',
+            'monnaie' => 'decimal:2',
+            'statut' => StatutVente::class,
+        ];
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function detailVentes(): HasMany
+    {
+        return $this->hasMany(DetailVente::class);
+    }
+
+    public function details(): HasMany
+    {
+        return $this->detailVentes();
+    }
+
+    public function paiements(): HasMany
+    {
+        return $this->hasMany(Paiement::class);
+    }
+
+    public function retoursVentes(): HasMany
+    {
+        return $this->hasMany(RetourVente::class);
+    }
+}
