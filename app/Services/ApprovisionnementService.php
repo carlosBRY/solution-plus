@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\MouvementType;
 use App\Enums\StatutApprovisionnement;
 use App\Models\Approvisionnement;
+use App\Models\CompteFinancier;
 use App\Models\Conditionnement;
 use App\Models\DetailApprovisionnement;
 use App\Models\MouvementStock;
@@ -16,6 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class ApprovisionnementService
 {
+    public function __construct(
+        protected CompteFinancierService $compteService
+    ) {}
+
     /**
      * Crée un nouvel approvisionnement. Si le statut est RECEPTIONNE, met immédiatement à jour le stock.
      */
@@ -25,16 +30,26 @@ class ApprovisionnementService
             $numero = 'APP-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -5));
             $statut = $data['statut'] ?? StatutApprovisionnement::EN_ATTENTE->value;
 
+            $compte = null;
+            if (! empty($data['compte_financier_id'])) {
+                $compte = CompteFinancier::find($data['compte_financier_id']);
+            } elseif (! empty($data['mode'])) {
+                $compte = $this->compteService->getCompteParMode($data['mode']);
+            }
+
             $approvisionnement = Approvisionnement::create([
                 'fournisseur_id' => $data['fournisseur_id'],
                 'user_id' => $user->id,
                 'numero' => $numero,
+                'reference_facture' => $data['reference_facture'] ?? null,
                 'date' => $data['date'] ?? now(),
                 'statut' => $statut,
                 'montant' => 0,
                 'remise' => $data['remise'] ?? 0,
                 'tva' => $data['tva'] ?? 0,
                 'total' => 0,
+                'mode' => $compte?->mode ?? ($data['mode'] ?? null),
+                'compte_financier_id' => $compte?->id,
             ]);
 
             $montantSousTotal = 0;
@@ -82,7 +97,20 @@ class ApprovisionnementService
                 'total' => $totalFinal,
             ]);
 
-            return $approvisionnement->load('details.produit', 'details.conditionnement', 'fournisseur');
+            // Débiter le compte financier si un compte est sélectionné et si totalFinal > 0
+            if ($compte && $totalFinal > 0) {
+                $refFact = $approvisionnement->reference_facture ? " (Facture: {$approvisionnement->reference_facture})" : '';
+                $this->compteService->debiter(
+                    $compte,
+                    $user,
+                    $totalFinal,
+                    "Approvisionnement {$approvisionnement->numero}{$refFact}",
+                    $approvisionnement->id,
+                    'approvisionnement'
+                );
+            }
+
+            return $approvisionnement->load('details.produit', 'details.conditionnement', 'fournisseur', 'compteFinancier');
         });
     }
 

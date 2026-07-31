@@ -145,9 +145,12 @@
     initTableSearch();
     initThemeToggle();
 
-    // Initialize user profile values in UI. Provide a window.adminHMDUser object to override defaults.
+    // Initialize user profile values in UI only if window.adminHMDUser is explicitly set.
     function initUserProfile() {
-      var user = window.adminHMDUser || { name: "Admin Hasan", workspace: "Active Workspace", avatar: "../assets/images/avatar/avatar.jpg" };
+      if (!window.adminHMDUser) {
+        return;
+      }
+      var user = window.adminHMDUser;
 
       var sidebarNameEl = document.querySelector(".sidebar-user strong");
       var sidebarWorkspaceEl = document.querySelector(".sidebar-user small");
@@ -155,12 +158,16 @@
       var profileNameEls = document.querySelectorAll(".profile-name");
       var profileAvatarEls = document.querySelectorAll(".profile-button .avatar-img, .profile-button img");
 
-      if (sidebarNameEl) sidebarNameEl.textContent = user.name;
-      if (sidebarWorkspaceEl) sidebarWorkspaceEl.textContent = user.workspace;
+      if (sidebarNameEl && user.name) sidebarNameEl.textContent = user.name;
+      if (sidebarWorkspaceEl && user.workspace) sidebarWorkspaceEl.textContent = user.workspace;
       if (sidebarAvatar && user.avatar) { sidebarAvatar.src = user.avatar; sidebarAvatar.alt = user.name; }
 
-      Array.prototype.forEach.call(profileNameEls, function (el) { el.textContent = user.name; });
-      Array.prototype.forEach.call(profileAvatarEls, function (img) { if (user.avatar) img.src = user.avatar; if (user.name) img.alt = user.name; });
+      if (user.name) {
+        Array.prototype.forEach.call(profileNameEls, function (el) { el.textContent = user.name; });
+      }
+      if (user.avatar) {
+        Array.prototype.forEach.call(profileAvatarEls, function (img) { img.src = user.avatar; if (user.name) img.alt = user.name; });
+      }
     }
 
     initUserProfile();

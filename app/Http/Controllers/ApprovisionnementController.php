@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\StatutApprovisionnement;
 use App\Models\Approvisionnement;
+use App\Models\CompteFinancier;
 use App\Models\Fournisseur;
 use App\Models\Produit;
 use App\Services\ApprovisionnementService;
@@ -22,12 +23,13 @@ class ApprovisionnementController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Approvisionnement::with(['fournisseur', 'user', 'details.produit']);
+        $query = Approvisionnement::with(['fournisseur', 'user', 'compteFinancier', 'details.produit']);
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('numero', 'like', "%{$search}%")
+                    ->orWhere('reference_facture', 'like', "%{$search}%")
                     ->orWhereHas('fournisseur', function ($fq) use ($search) {
                         $fq->where('nom', 'like', "%{$search}%");
                     });
@@ -66,8 +68,9 @@ class ApprovisionnementController extends Controller
         $fournisseurs = Fournisseur::orderBy('nom')->get();
         $produits = Produit::with(['conditionnements', 'stock'])->where('actif', true)->orderBy('nom')->get();
         $statuts = StatutApprovisionnement::cases();
+        $comptes = CompteFinancier::actif()->orderBy('nom')->get();
 
-        return view('approvisionnements.create', compact('fournisseurs', 'produits', 'statuts'));
+        return view('approvisionnements.create', compact('fournisseurs', 'produits', 'statuts', 'comptes'));
     }
 
     /**
@@ -77,6 +80,8 @@ class ApprovisionnementController extends Controller
     {
         $validated = $request->validate([
             'fournisseur_id' => ['required', 'exists:fournisseurs,id'],
+            'reference_facture' => ['required', 'string', 'max:255'],
+            'compte_financier_id' => ['nullable', 'exists:comptes_financiers,id'],
             'date' => ['nullable', 'date'],
             'statut' => ['required', 'string'],
             'remise' => ['nullable', 'numeric', 'min:0'],
@@ -103,7 +108,7 @@ class ApprovisionnementController extends Controller
      */
     public function show(Approvisionnement $approvisionnement): View
     {
-        $approvisionnement->load(['fournisseur', 'user', 'details.produit', 'details.conditionnement']);
+        $approvisionnement->load(['fournisseur', 'user', 'compteFinancier', 'details.produit', 'details.conditionnement']);
 
         return view('approvisionnements.show', compact('approvisionnement'));
     }

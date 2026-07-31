@@ -19,6 +19,7 @@ class ReglementDette extends Model
         'numero',
         'montant',
         'mode',
+        'compte_financier_id',
         'reference',
         'date',
         'observation',
@@ -40,5 +41,10 @@ class ReglementDette extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function compteFinancier(): BelongsTo
+    {
+        return $this->belongsTo(CompteFinancier::class);
     }
 }

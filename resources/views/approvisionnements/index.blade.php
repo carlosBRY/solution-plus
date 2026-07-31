@@ -88,10 +88,11 @@
             <table class="table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>N° Commande / Facture</th>
+                        <th>N° Appro.</th>
+                        <th>Ref. Facture</th>
                         <th>Date</th>
                         <th>Fournisseur</th>
-                        <th>Saisi par</th>
+                        <th>Compte Débité</th>
                         <th>Montant Total</th>
                         <th>Statut</th>
                         <th class="text-end">Actions</th>
@@ -101,9 +102,14 @@
                     @forelse($approvisionnements as $app)
                         <tr>
                             <td><a href="{{ route('approvisionnements.show', $app) }}" class="fw-bold text-decoration-none">{{ $app->numero }}</a></td>
+                            <td><span class="fw-mono text-dark">{{ $app->reference_facture ?? '—' }}</span></td>
                             <td>{{ $app->date->format('d/m/Y H:i') }}</td>
                             <td><span class="fw-semibold">{{ $app->fournisseur->nom }}</span></td>
-                            <td>{{ $app->user->name }}</td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                                    {{ $app->compteFinancier?->nom ?? ($app->mode ?? 'Non débité') }}
+                                </span>
+                            </td>
                             <td class="fw-bold text-primary">{{ number_format($app->total, 0, ',', ' ') }} FCFA</td>
                             <td>
                                 @if($app->statut->value === 'RECEPTIONNE' || $app->statut === \App\Enums\StatutApprovisionnement::RECEPTIONNE)
@@ -130,7 +136,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">Aucun approvisionnement enregistré.</td>
+                            <td colspan="8" class="text-center text-muted py-4">Aucun approvisionnement enregistré.</td>
                         </tr>
                     @endforelse
                 </tbody>

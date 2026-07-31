@@ -39,9 +39,13 @@
     @endcan
 
     @can('gérer-stocks')
-    <a class="nav-link {{ request()->routeIs('stocks.*') ? 'active' : '' }}" href="#">
+    <a class="nav-link {{ request()->routeIs('stocks.index') ? 'active' : '' }}" href="{{ route('stocks.index') }}">
       <span class="nav-icon"><i class="bi bi-layers" aria-hidden="true"></i></span>
       <span class="nav-text">Gestion du Stock</span>
+    </a>
+    <a class="nav-link {{ request()->routeIs('stocks.mouvements') ? 'active' : '' }}" href="{{ route('stocks.mouvements') }}" style="padding-left: 2.8rem; font-size: 0.85rem;">
+      <span class="nav-icon"><i class="bi bi-arrow-left-right" aria-hidden="true"></i></span>
+      <span class="nav-text">Mouvements de Stock</span>
     </a>
     <a class="nav-link {{ request()->routeIs('deteriorations.*') ? 'active' : '' }}" href="{{ route('deteriorations.index') }}">
       <span class="nav-icon"><i class="bi bi-slash-circle" aria-hidden="true"></i></span>
@@ -57,9 +61,13 @@
     @endcan
 
     @can('gérer-caisses')
-    <a class="nav-link {{ request()->routeIs('caisses.*') ? 'active' : '' }}" href="#">
+    <a class="nav-link {{ request()->routeIs('comptes.*') ? 'active' : '' }}" href="{{ route('comptes.index') }}">
+      <span class="nav-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+      <span class="nav-text">Caisse Principale</span>
+    </a>
+    <a class="nav-link {{ request()->routeIs('caisses.*') ? 'active' : '' }}" href="{{ route('caisses.index') }}" style="padding-left: 2.8rem; font-size: 0.85rem;">
       <span class="nav-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
-      <span class="nav-text">Caisses</span>
+      <span class="nav-text">Sessions Caisses</span>
     </a>
     @endcan
 
@@ -78,14 +86,14 @@
     @endcan
 
     @can('gérer-depenses')
-    <a class="nav-link {{ request()->routeIs('depenses.*') ? 'active' : '' }}" href="#">
+    <a class="nav-link {{ request()->routeIs('depenses.*') ? 'active' : '' }}" href="{{ route('depenses.index') }}">
       <span class="nav-icon"><i class="bi bi-receipt" aria-hidden="true"></i></span>
       <span class="nav-text">Dépenses</span>
     </a>
     @endcan
 
     @can('gérer-inventaires')
-    <a class="nav-link {{ request()->routeIs('inventaires.*') ? 'active' : '' }}" href="#">
+    <a class="nav-link {{ request()->routeIs('inventaires.*') ? 'active' : '' }}" href="{{ route('inventaires.index') }}">
       <span class="nav-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></span>
       <span class="nav-text">Inventaires</span>
     </a>
@@ -113,7 +121,7 @@
   <div class="sidebar-user">
     <img class="avatar-img avatar-md sidebar-user-avatar" src="{{ asset('assets/images/avatar/avatar.jpg') }}" alt="{{ Auth::user()->name }}">
     <strong>{{ Auth::user()->name }}</strong>
-    <small class="badge bg-success mt-1">{{ Auth::user()->roles->first()?->name ?? 'Utilisateur' }}</small>
+    <span class="badge bg-success mt-1">{{ Auth::user()->roles->first()?->name ?? 'Utilisateur' }}</span>
   </div>
 
   <div class="sidebar-footer">

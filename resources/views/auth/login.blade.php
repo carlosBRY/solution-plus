@@ -34,18 +34,12 @@
             @enderror
         </div>
 
-        <!-- Remember Me -->
-        <div class="form-check mb-4">
-            <input class="form-check-input" type="checkbox" id="remember_me" name="remember">
-            <label class="form-check-label" for="remember_me">Se souvenir de moi</label>
-        </div>
+     
 
         <button class="btn btn-primary w-100 py-2 fs-6 fw-semibold" type="submit">
             <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i> Se connecter
         </button>
     </form>
 
-    <div class="auth-footer text-center mt-4">
-        Nouveau collaborateur ? <a href="{{ route('register') }}" class="fw-semibold">Créer un compte</a>
-    </div>
+   
 </x-guest-layout>

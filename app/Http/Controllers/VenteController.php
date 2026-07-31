@@ -77,16 +77,16 @@ class VenteController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'client_id' => ['nullable', 'exists:clients,id'],
+            'client_id' => ['nullable', 'required_if:mode_paiement,CREDIT', 'exists:clients,id'],
             'date' => ['nullable', 'date'],
             'mode_paiement' => ['required', 'string'],
-            'montant_paye' => ['required', 'numeric', 'min:0'],
+            'montant_paye' => ['nullable', 'numeric', 'min:0'],
             'remise_globale' => ['nullable', 'numeric', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.produit_id' => ['required', 'exists:produits,id'],
             'items.*.conditionnement_id' => ['required', 'exists:conditionnements,id'],
             'items.*.quantite_conditionnement' => ['required', 'integer', 'min:1'],
-            'items.*.prix' => ['required', 'numeric', 'min:0'],
+            'items.*.prix' => ['nullable', 'numeric', 'min:0'],
             'items.*.remise' => ['nullable', 'numeric', 'min:0'],
         ]);
 

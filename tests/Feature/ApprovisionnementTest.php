@@ -27,6 +27,7 @@ test('peut creer un approvisionnement receptionne qui incremente le stock', func
 
     $response = $this->actingAs($user)->post(route('approvisionnements.store'), [
         'fournisseur_id' => $fournisseur->id,
+        'reference_facture' => 'FACT-TEST-001',
         'date' => now()->format('Y-m-d H:i:s'),
         'statut' => StatutApprovisionnement::RECEPTIONNE->value,
         'items' => [
@@ -64,6 +65,7 @@ test('peut receptionner un approvisionnement en attente', function () {
     $service = app(ApprovisionnementService::class);
     $approvisionnement = $service->creerApprovisionnement($user, [
         'fournisseur_id' => $fournisseur->id,
+        'reference_facture' => 'FACT-TEST-002',
         'statut' => StatutApprovisionnement::EN_ATTENTE->value,
     ], [
         [

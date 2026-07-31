@@ -123,12 +123,22 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Statut</span>
-                        @if($vente->statut->value === 'PAYEE' || $vente->statut === \App\Enums\StatutVente::PAYEE)
-                            <span class="badge bg-success">PAYÉE</span>
+                        @if($vente->statut->value === 'PAYEE_CREDIT' || $vente->statut === \App\Enums\StatutVente::PAYEE_CREDIT)
+                            <span class="badge bg-info text-dark">CRÉDIT RÉGLÉ</span>
+                        @elseif($vente->statut->value === 'PAYEE' || $vente->statut === \App\Enums\StatutVente::PAYEE)
+                            <span class="badge bg-success">PAYÉE (COMPTANT)</span>
+                        @elseif($vente->statut->value === 'EN_ATTENTE' || $vente->statut === \App\Enums\StatutVente::EN_ATTENTE)
+                            <span class="badge bg-warning text-dark">CRÉDIT EN ATTENTE</span>
                         @else
-                            <span class="badge bg-warning text-dark">EN ATTENTE</span>
+                            <span class="badge bg-secondary">ANNULÉE</span>
                         @endif
                     </li>
+                    @if($vente->date_paiement_credit)
+                        <li class="list-group-item d-flex justify-content-between bg-info-subtle">
+                            <span class="fw-semibold text-dark"><i class="bi bi-calendar-check me-1"></i>Date Règlement Crédit</span>
+                            <span class="fw-bold text-dark">{{ $vente->date_paiement_credit->format('d/m/Y H:i') }}</span>
+                        </li>
+                    @endif
                 </ul>
             </div>
 

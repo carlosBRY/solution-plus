@@ -14,10 +14,13 @@ class Depense extends Model
     protected $fillable = [
         'user_id',
         'libelle',
+        'reference_piece',
         'categorie',
         'montant',
         'date',
         'observation',
+        'mode',
+        'compte_financier_id',
     ];
 
     protected function casts(): array
@@ -31,5 +34,10 @@ class Depense extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function compteFinancier(): BelongsTo
+    {
+        return $this->belongsTo(CompteFinancier::class);
     }
 }

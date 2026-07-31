@@ -21,6 +21,11 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link" href="{{ route('parametres.comptes.index') }}">
+                <i class="bi bi-wallet2 me-1"></i> Comptes & Moyens de Paiement
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link active" href="{{ route('parametres.conditionnements') }}">
                 <i class="bi bi-box-seam me-1"></i> Conditionnements des Produits
             </a>

@@ -24,6 +24,8 @@ class Vente extends Model
         'total',
         'montant_paye',
         'monnaie',
+        'is_credit',
+        'date_paiement_credit',
         'statut',
     ];
 
@@ -31,12 +33,14 @@ class Vente extends Model
     {
         return [
             'date' => 'datetime',
+            'date_paiement_credit' => 'datetime',
             'sous_total' => 'decimal:2',
             'remise' => 'decimal:2',
             'tva' => 'decimal:2',
             'total' => 'decimal:2',
             'montant_paye' => 'decimal:2',
             'monnaie' => 'decimal:2',
+            'is_credit' => 'boolean',
             'statut' => StatutVente::class,
         ];
     }

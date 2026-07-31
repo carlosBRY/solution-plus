@@ -75,6 +75,24 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label fw-bold" for="reference_facture">N° / Référence de la Facture <span class="text-danger">*</span></label>
+                        <input class="form-control" type="text" id="reference_facture" name="reference_facture" placeholder="Ex: FACT-2026-0489, N° BL..." required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" for="compte_financier_id">Moyen de Paiement / Compte à Débiter</label>
+                        <select class="form-select" id="compte_financier_id" name="compte_financier_id">
+                            <option value="">Sélectionner le compte de paiement...</option>
+                            @foreach($comptes as $c)
+                                <option value="{{ $c->id }}">
+                                    {{ $c->nom }} (Solde: {{ number_format($c->solde_courant, 0, ',', ' ') }} FCFA)
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Le montant total de l'approvisionnement sera immédiatement débité de ce compte.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label" for="date">Date d'approvisionnement</label>
                         <input class="form-control" type="datetime-local" id="date" name="date" value="{{ date('Y-m-d\TH:i') }}">
                     </div>

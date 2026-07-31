@@ -108,12 +108,22 @@
                         <span>{{ $approvisionnement->numero }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted fw-bold">Réf. Facture</span>
+                        <span class="fw-bold text-dark">{{ $approvisionnement->reference_facture ?? '—' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Statut</span>
                         @if($approvisionnement->statut->value === 'RECEPTIONNE' || $approvisionnement->statut === \App\Enums\StatutApprovisionnement::RECEPTIONNE)
                             <span class="badge bg-success">RÉCEPTIONNÉ</span>
                         @else
                             <span class="badge bg-warning text-dark">EN ATTENTE</span>
                         @endif
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Compte Débité</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                            {{ $approvisionnement->compteFinancier?->nom ?? ($approvisionnement->mode ?? 'Non débité') }}
+                        </span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Saisi par</span>

@@ -26,6 +26,7 @@ class ProduitFactory extends Factory
             'prix_achat' => $prixAchat,
             'prix_vente' => $prixAchat * 1.4,
             'stock_min' => 5,
+            'stock_max' => 100,
             'photo' => null,
             'description' => fake()->sentence(),
             'actif' => true,

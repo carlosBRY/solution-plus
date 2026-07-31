@@ -19,6 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class VenteService
 {
+    public function __construct(
+        protected CompteFinancierService $compteService
+    ) {}
+
     /**
      * Enregistre une vente, contrôle la disponibilité en stock, décrémente les stocks en unités de base et enregistre le règlement (avec gestion automatique du crédit).
      */
@@ -69,9 +73,8 @@ class VenteService
                     ]);
                 }
 
-                $prixVente = isset($item['prix'])
-                    ? (float) $item['prix']
-                    : (float) ($conditionnement->prix_vente ?? ($produit->prix_vente * $coeff));
+                // Prix de vente fixé selon le paramétrage DB (non modifiable)
+                $prixVente = (float) ($conditionnement->prix_vente ?? ($produit->prix_vente * $coeff));
 
                 $remiseLigne = (float) ($item['remise'] ?? 0);
                 $totalLigne = max(0, ($quantiteCond * $prixVente) - $remiseLigne);
@@ -114,52 +117,91 @@ class VenteService
             $tva = (float) ($data['tva'] ?? 0);
             $totalVente = max(0, $sousTotal - $remiseGlobale + $tva);
 
-            $montantPaye = $modePaiement === ModePaiement::CREDIT->value
-                ? (float) ($data['montant_paye'] ?? 0)
-                : (float) ($data['montant_paye'] ?? $totalVente);
+            $isCredit = ($modePaiement === ModePaiement::CREDIT->value || $modePaiement === ModePaiement::CREDIT);
 
-            $monnaie = max(0, $montantPaye - $totalVente);
-            $dette = max(0, $totalVente - $montantPaye);
-
-            // Si vente à crédit ou paiement partiel
-            if ($dette > 0) {
+            if ($isCredit) {
                 if (! $client) {
                     throw ValidationException::withMessages([
-                        'client_id' => 'Un client enregistré doit être sélectionné pour toute vente à crédit ou avec solde restant.',
+                        'client_id' => 'Pour enregistrer une vente à crédit, vous devez obligatoirement sélectionner un client enregistré.',
                     ]);
                 }
 
-                if ($client->depassePlafondCredit($dette)) {
+                $montantPaye = (float) ($data['montant_paye'] ?? 0);
+                $dette = max(0, $totalVente - $montantPaye);
+
+                if ($dette > 0 && $client->depassePlafondCredit($dette)) {
                     $plafondFormate = number_format($client->plafond_credit, 0, ',', ' ');
                     $soldeFormate = number_format($client->solde, 0, ',', ' ');
                     throw ValidationException::withMessages([
-                        'credit' => "Cette vente (crédit de {$dette} FCFA) dépasse le plafond autorisé pour {$client->nom}. Solde actuel: {$soldeFormate} FCFA, Plafond: {$plafondFormate} FCFA.",
+                        'credit' => "Cette vente à crédit ({$dette} FCFA) dépasse le plafond autorisé pour {$client->nom}. Solde actuel: {$soldeFormate} FCFA, Plafond: {$plafondFormate} FCFA.",
                     ]);
                 }
 
-                // Incrémenter le solde débiteur (crédit / dette) du client
-                $client->increment('solde', $dette);
+                // Incrémenter le solde débiteur du client (dette) sans impacter la caisse
+                if ($dette > 0) {
+                    $client->increment('solde', $dette);
+                }
+            } else {
+                $montantPaye = (float) ($data['montant_paye'] ?? $totalVente);
+
+                if ($montantPaye < $totalVente) {
+                    throw ValidationException::withMessages([
+                        'montant_paye' => 'Le montant reçu ('.number_format($montantPaye, 0, ',', ' ').' FCFA) est inférieur au total de la commande ('.number_format($totalVente, 0, ',', ' ').' FCFA). Sélectionnez le mode "Crédit" pour accorder un crédit à un client.',
+                    ]);
+                }
+
+                $dette = 0;
             }
 
-            $statutVente = ($dette <= 0.01) ? StatutVente::PAYEE : StatutVente::EN_ATTENTE;
+            $monnaie = max(0, $montantPaye - $totalVente);
+
+            $statutVente = StatutVente::PAYEE;
+            $datePaiementCredit = null;
+
+            if ($isCredit) {
+                if ($dette <= 0.01) {
+                    $statutVente = StatutVente::PAYEE_CREDIT;
+                    $datePaiementCredit = now();
+                } else {
+                    $statutVente = StatutVente::EN_ATTENTE;
+                }
+            }
 
             $vente->update([
                 'sous_total' => $sousTotal,
                 'total' => $totalVente,
                 'montant_paye' => $montantPaye,
                 'monnaie' => $monnaie,
+                'is_credit' => $isCredit,
+                'date_paiement_credit' => $datePaiementCredit,
                 'statut' => $statutVente,
             ]);
 
-            // Enregistrer le règlement partiel ou total
+            // Enregistrer le règlement sur le compte financier uniquement pour la somme réellement reçue
             if ($montantPaye > 0) {
-                Paiement::create([
+                $montantEncaisse = min($montantPaye, $totalVente);
+                $modeCode = is_object($modePaiement) ? $modePaiement->value : (string) $modePaiement;
+                $compte = $this->compteService->getCompteParMode($modeCode);
+
+                $paiement = Paiement::create([
                     'vente_id' => $vente->id,
                     'mode' => $modePaiement,
-                    'montant' => min($montantPaye, $totalVente),
+                    'montant' => $montantEncaisse,
                     'reference' => $data['reference_paiement'] ?? null,
+                    'compte_financier_id' => $compte?->id,
                     'date' => now(),
                 ]);
+
+                if ($compte) {
+                    $this->compteService->crediter(
+                        $compte,
+                        $user,
+                        $montantEncaisse,
+                        "Vente #{$vente->numero}",
+                        $vente->id,
+                        'vente'
+                    );
+                }
             }
 
             return $vente->load('details.produit', 'details.conditionnement', 'client', 'paiements');

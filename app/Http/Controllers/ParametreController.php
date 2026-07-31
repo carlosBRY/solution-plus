@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompteFinancier;
 use App\Models\Conditionnement;
 use App\Models\Parametre;
 use App\Models\Produit;
+use App\Services\CompteFinancierService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -172,5 +174,89 @@ class ParametreController extends Controller
 
         return redirect()->route('parametres.conditionnements')
             ->with('success', "Le conditionnement '{$nom}' a été supprimé.");
+    }
+
+    /**
+     * Liste et gestion des comptes financiers / moyens de paiement.
+     */
+    public function comptes(): View
+    {
+        $comptes = CompteFinancier::latest()->get();
+        $modesDisponibles = [
+            'ESPECES' => 'Espèces',
+            'ORANGE_MONEY' => 'Orange Money',
+            'MOOV_MONEY' => 'Moov Money',
+            'WAVE' => 'Wave',
+            'CARTE' => 'Carte Bancaire',
+            'VIREMENT' => 'Virement / Chèque',
+            'CREDIT' => 'Compte Crédit Client',
+        ];
+
+        return view('parametres.comptes', compact('comptes', 'modesDisponibles'));
+    }
+
+    /**
+     * Ajouter un compte financier / moyen de paiement.
+     */
+    public function storeCompte(Request $request, CompteFinancierService $service): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nom' => ['required', 'string', 'max:255'],
+            'mode' => ['required', 'string', 'max:50', 'unique:comptes_financiers,mode'],
+            'solde_initial' => ['required', 'numeric', 'min:0'],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $compte = CompteFinancier::create([
+            'nom' => $validated['nom'],
+            'mode' => strtoupper($validated['mode']),
+            'solde_initial' => $validated['solde_initial'],
+            'solde_courant' => $validated['solde_initial'],
+            'actif' => true,
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        if ($validated['solde_initial'] > 0) {
+            $service->initialiserSolde($compte, $request->user(), (float) $validated['solde_initial']);
+        }
+
+        return redirect()->route('parametres.comptes.index')
+            ->with('success', "Le compte '{$compte->nom}' a été créé avec un solde initial de ".number_format($compte->solde_initial).' FCFA.');
+    }
+
+    /**
+     * Modifier un compte financier.
+     */
+    public function updateCompte(Request $request, CompteFinancier $compte): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nom' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'actif' => ['nullable', 'boolean'],
+        ]);
+
+        $compte->update([
+            'nom' => $validated['nom'],
+            'description' => $validated['description'] ?? null,
+            'actif' => $request->has('actif'),
+        ]);
+
+        return redirect()->route('parametres.comptes.index')
+            ->with('success', "Le compte '{$compte->nom}' a été mis à jour.");
+    }
+
+    /**
+     * Re-initialiser le solde d'un compte financier.
+     */
+    public function initialiserSolde(Request $request, CompteFinancier $compte, CompteFinancierService $service): RedirectResponse
+    {
+        $validated = $request->validate([
+            'solde' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $service->initialiserSolde($compte, $request->user(), (float) $validated['solde']);
+
+        return redirect()->route('parametres.comptes.index')
+            ->with('success', "Le solde du compte '{$compte->nom}' a été réinitialisé à ".number_format($validated['solde']).' FCFA.');
     }
 }

@@ -101,7 +101,11 @@
                                     <td class="fw-bold">{{ $reg->numero }}</td>
                                     <td>{{ $reg->date->format('d/m/Y H:i') }}</td>
                                     <td class="fw-bold text-success">{{ number_format($reg->montant, 0, ',', ' ') }} FCFA</td>
-                                    <td><span class="badge bg-light text-body border">{{ $reg->mode }}</span></td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                                            {{ $reg->compteFinancier?->nom ?? $reg->mode }}
+                                        </span>
+                                    </td>
                                     <td>{{ $reg->user->name }}</td>
                                 </tr>
                             @empty
@@ -140,10 +144,15 @@
                                     <td class="fw-bold">{{ number_format($v->total, 0, ',', ' ') }} FCFA</td>
                                     <td>{{ number_format($v->montant_paye, 0, ',', ' ') }} FCFA</td>
                                     <td>
-                                        @if($v->statut->value === 'PAYEE' || $v->statut === \App\Enums\StatutVente::PAYEE)
-                                            <span class="badge bg-success">PAYÉE</span>
+                                        @if($v->statut->value === 'PAYEE_CREDIT' || $v->statut === \App\Enums\StatutVente::PAYEE_CREDIT)
+                                            <span class="badge bg-info text-dark">CRÉDIT RÉGLÉ</span>
+                                            @if($v->date_paiement_credit)
+                                                <small class="d-block text-muted fs-7">le {{ $v->date_paiement_credit->format('d/m/Y') }}</small>
+                                            @endif
+                                        @elseif($v->statut->value === 'PAYEE' || $v->statut === \App\Enums\StatutVente::PAYEE)
+                                            <span class="badge bg-success">PAYÉE (COMPTANT)</span>
                                         @else
-                                            <span class="badge bg-warning text-dark">CRÉDIT / EN ATTENTE</span>
+                                            <span class="badge bg-warning text-dark">CRÉDIT EN ATTENTE</span>
                                         @endif
                                     </td>
                                     <td class="text-end">
@@ -165,38 +174,41 @@
     {{-- Modal Remboursement Dette --}}
     @if($client->solde > 0)
         <div class="modal fade" id="reglerDetteModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form method="POST" action="{{ route('clients.regler-dette', $client) }}">
                         @csrf
-                        <div class="modal-header">
+                        <div class="modal-header bg-success text-white">
                             <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>Règlement de Dette - {{ $client->nom }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body p-4">
                             <div class="alert alert-info small mb-3">
-                                Dette actuelle restant à régler : <strong>{{ number_format($client->solde, 0, ',', ' ') }} FCFA</strong>
+                                <i class="bi bi-info-circle me-1"></i>
+                                Dette actuelle du client à rembourser : <strong>{{ number_format($client->solde, 0, ',', ' ') }} FCFA</strong>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Montant du Règlement (FCFA) <span class="text-danger">*</span></label>
-                                <input class="form-control fw-bold fs-5 text-success" type="number" step="0.01" name="montant" max="{{ $client->solde }}" value="{{ $client->solde }}" required>
+                                <label class="form-label fw-bold">Montant Encaissé (FCFA) <span class="text-danger">*</span></label>
+                                <input class="form-control fw-bold fs-5 text-success" type="number" step="0.01" min="1" max="{{ $client->solde }}" name="montant" value="{{ $client->solde }}" required>
+                                <small class="text-muted">Somme versée par le client pour rembourser sa dette.</small>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Mode de Règlement <span class="text-danger">*</span></label>
-                                <select class="form-select" name="mode" required>
-                                    <option value="ESPECES">Espèces</option>
-                                    <option value="ORANGE_MONEY">Orange Money</option>
-                                    <option value="MOOV_MONEY">Moov Money / Wave</option>
-                                    <option value="CARTE">Carte Bancaire</option>
-                                    <option value="VIREMENT">Virement Bancaire</option>
+                                <label class="form-label fw-bold">Compte / Caisses Réceptrice (Entrée d'argent) <span class="text-danger">*</span></label>
+                                <select class="form-select fw-semibold" name="compte_financier_id" required>
+                                    @foreach($comptes as $c)
+                                        <option value="{{ $c->id }}">
+                                            {{ $c->nom }} (Solde actuel: {{ number_format($c->solde_courant, 0, ',', ' ') }} FCFA)
+                                        </option>
+                                    @endforeach
                                 </select>
+                                <small class="text-success fw-semibold"><i class="bi bi-arrow-down-circle me-1"></i>L'argent versé sera immédiatement <u>crédité</u> (ajouté) sur ce compte.</small>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Référence Transaction</label>
-                                <input class="form-control" type="text" name="reference" placeholder="ex: Réf transaction Wave / Chèque N°">
+                                <label class="form-label fw-bold">Référence Transaction / Pièce</label>
+                                <input class="form-control" type="text" name="reference" placeholder="ex: N° Reçu, Réf transaction Wave / Orange Money...">
                             </div>
 
                             <div class="mb-3">
@@ -204,9 +216,9 @@
                                 <textarea class="form-control" name="observation" rows="2" placeholder="Note optionnelle..."></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer">
+                        <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Enregistrer le Remboursement</button>
+                            <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-circle me-1"></i> Encaisser le Remboursement</button>
                         </div>
                     </form>
                 </div>

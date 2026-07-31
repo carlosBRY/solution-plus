@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\CompteFinancier;
 use App\Services\ClientCreditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -92,8 +93,9 @@ class ClientController extends Controller
         ]);
 
         $totalAchats = $client->ventes()->sum('total');
+        $comptes = CompteFinancier::actif()->orderBy('nom')->get();
 
-        return view('clients.show', compact('client', 'totalAchats'));
+        return view('clients.show', compact('client', 'totalAchats', 'comptes'));
     }
 
     /**
@@ -122,7 +124,8 @@ class ClientController extends Controller
     {
         $validated = $request->validate([
             'montant' => ['required', 'numeric', 'min:1'],
-            'mode' => ['required', 'string'],
+            'mode' => ['nullable', 'string'],
+            'compte_financier_id' => ['required', 'exists:comptes_financiers,id'],
             'reference' => ['nullable', 'string', 'max:100'],
             'observation' => ['nullable', 'string', 'max:500'],
         ]);

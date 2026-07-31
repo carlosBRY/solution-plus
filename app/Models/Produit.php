@@ -24,6 +24,7 @@ class Produit extends Model
         'prix_achat',
         'prix_vente',
         'stock_min',
+        'stock_max',
         'photo',
         'description',
         'actif',
@@ -35,6 +36,7 @@ class Produit extends Model
             'prix_achat' => 'decimal:2',
             'prix_vente' => 'decimal:2',
             'stock_min' => 'integer',
+            'stock_max' => 'integer',
             'actif' => 'boolean',
         ];
     }

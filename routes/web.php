@@ -1,14 +1,19 @@
 <?php
 
 use App\Http\Controllers\ApprovisionnementController;
+use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CompteFinancierController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\DeteriorationController;
 use App\Http\Controllers\FournisseurController;
+use App\Http\Controllers\InventaireController;
 use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\VenteController;
 use Illuminate\Support\Facades\Route;
@@ -59,10 +64,35 @@ Route::middleware('auth')->group(function () {
         Route::resource('fournisseurs', FournisseurController::class)->except(['create', 'edit']);
     });
 
-    // Détériorations & Pertes de stock
+    // Caisses & Comptes Financiers
+    Route::middleware('can:gérer-caisses')->group(function () {
+        Route::get('comptes', [CompteFinancierController::class, 'index'])->name('comptes.index');
+        Route::post('comptes/transferer', [CompteFinancierController::class, 'transferer'])->name('comptes.transferer');
+        Route::get('comptes/{compte}', [CompteFinancierController::class, 'show'])->name('comptes.show');
+
+        Route::post('caisses/ouvrir', [CaisseController::class, 'ouvrir'])->name('caisses.ouvrir');
+        Route::post('caisses/{caisse}/fermer', [CaisseController::class, 'fermer'])->name('caisses.fermer');
+        Route::resource('caisses', CaisseController::class)->only(['index', 'show']);
+    });
+
+    // Dépenses
+    Route::middleware('can:gérer-depenses')->group(function () {
+        Route::resource('depenses', DepenseController::class)->except(['create', 'edit', 'show']);
+    });
+
+    // Stock & Mouvements de stock
     Route::middleware('can:gérer-stocks')->group(function () {
+        Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
+        Route::post('stocks/{produit}/ajuster', [StockController::class, 'ajuster'])->name('stocks.ajuster');
+        Route::get('stocks/mouvements', [StockController::class, 'mouvements'])->name('stocks.mouvements');
+
         Route::post('deteriorations/{deterioration}/valider', [DeteriorationController::class, 'valider'])->name('deteriorations.valider');
         Route::resource('deteriorations', DeteriorationController::class)->except(['edit', 'update']);
+    });
+
+    // Inventaires
+    Route::middleware('can:gérer-inventaires')->group(function () {
+        Route::resource('inventaires', InventaireController::class)->except(['edit', 'update', 'destroy']);
     });
 
     // Module Paramètres (Général, Conditionnements, Utilisateurs)
@@ -74,6 +104,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/conditionnements', [ParametreController::class, 'storeConditionnement'])->name('conditionnements.store');
         Route::put('/conditionnements/{conditionnement}', [ParametreController::class, 'updateConditionnement'])->name('conditionnements.update');
         Route::delete('/conditionnements/{conditionnement}', [ParametreController::class, 'destroyConditionnement'])->name('conditionnements.destroy');
+
+        Route::get('/comptes-financiers', [ParametreController::class, 'comptes'])->name('comptes.index');
+        Route::post('/comptes-financiers', [ParametreController::class, 'storeCompte'])->name('comptes.store');
+        Route::put('/comptes-financiers/{compte}', [ParametreController::class, 'updateCompte'])->name('comptes.update');
+        Route::post('/comptes-financiers/{compte}/initialiser', [ParametreController::class, 'initialiserSolde'])->name('comptes.initialiser');
     });
 
     // Paramètres > Gestion des utilisateurs

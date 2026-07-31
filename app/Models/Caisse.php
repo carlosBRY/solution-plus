@@ -20,6 +20,7 @@ class Caisse extends Model
         'solde_final',
         'ecart',
         'statut',
+        'details_comptes',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class Caisse extends Model
             'solde_final' => 'decimal:2',
             'ecart' => 'decimal:2',
             'statut' => StatutCaisse::class,
+            'details_comptes' => 'array',
         ];
     }
 

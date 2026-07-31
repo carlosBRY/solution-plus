@@ -8,10 +8,17 @@
       <span></span>
       <span></span>
     </button>
-
-    <form class="d-none d-md-flex ms-3 flex-grow-1" role="search" onsubmit="event.preventDefault();">
-      <input class="form-control search-input" type="search" placeholder="Rechercher un produit, une vente, un client..." aria-label="Search">
-    </form>
+   <button class="profile-button ml-2" style="margin-left: 10px;" type="button" >
+          @php
+          $current_user = Auth::user();
+          @endphp
+          @if ($current_user)
+          
+          <span class="profile-name d-none d-sm-inline">{{ $current_user->name }}</span>
+          <span class="badge bg-success mt-1">{{ Auth::user()->roles->first()?->name ?? 'Utilisateur' }}</span>
+          @endif
+        </button>
+    
 
     <div class="navbar-actions ms-auto">
       <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">

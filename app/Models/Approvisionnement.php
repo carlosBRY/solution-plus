@@ -17,12 +17,15 @@ class Approvisionnement extends Model
         'fournisseur_id',
         'user_id',
         'numero',
+        'reference_facture',
         'date',
         'montant',
         'remise',
         'tva',
         'total',
         'statut',
+        'mode',
+        'compte_financier_id',
     ];
 
     protected function casts(): array
@@ -45,6 +48,11 @@ class Approvisionnement extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function compteFinancier(): BelongsTo
+    {
+        return $this->belongsTo(CompteFinancier::class);
     }
 
     public function detailApprovisionnements(): HasMany

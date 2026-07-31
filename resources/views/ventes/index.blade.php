@@ -65,8 +65,9 @@
                     <div class="col-auto">
                         <select class="form-select form-select-sm" name="statut">
                             <option value="">Tous les statuts</option>
-                            <option value="PAYEE" {{ request('statut') === 'PAYEE' ? 'selected' : '' }}>Payée</option>
-                            <option value="EN_ATTENTE" {{ request('statut') === 'EN_ATTENTE' ? 'selected' : '' }}>En attente</option>
+                            <option value="PAYEE" {{ request('statut') === 'PAYEE' ? 'selected' : '' }}>Payée (Comptant)</option>
+                            <option value="PAYEE_CREDIT" {{ request('statut') === 'PAYEE_CREDIT' ? 'selected' : '' }}>Crédit Réglé</option>
+                            <option value="EN_ATTENTE" {{ request('statut') === 'EN_ATTENTE' ? 'selected' : '' }}>Crédit en attente</option>
                         </select>
                     </div>
                     <div class="col-auto">
@@ -80,12 +81,12 @@
             <table class="table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>N° Ticket / Facture</th>
-                        <th>Date</th>
+                        <th>N° Ticket</th>
+                        <th>Date Vente</th>
                         <th>Client</th>
                         <th>Vendeur</th>
-                        <th>Paiement</th>
-                        <th>Total Vente</th>
+                        <th>Mode Règlement</th>
+                        <th>Total Net</th>
                         <th>Statut</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -99,14 +100,23 @@
                             <td>{{ $v->user->name }}</td>
                             <td>
                                 @php $p = $v->paiements->first(); @endphp
-                                <span class="badge bg-light text-body border">{{ $p ? $p->mode : '—' }}</span>
+                                <span class="badge bg-light text-body border">{{ $v->is_credit ? 'Crédit' : ($p ? $p->mode : '—') }}</span>
                             </td>
                             <td class="fw-bold text-success">{{ number_format($v->total, 0, ',', ' ') }} FCFA</td>
                             <td>
-                                @if($v->statut->value === 'PAYEE' || $v->statut === \App\Enums\StatutVente::PAYEE)
-                                    <span class="badge bg-success">Payée</span>
+                                @if($v->statut->value === 'PAYEE_CREDIT' || $v->statut === \App\Enums\StatutVente::PAYEE_CREDIT)
+                                    <span class="badge bg-info text-dark" title="Crédit entièrement réglé par le client">
+                                        <i class="bi bi-check-all me-1"></i>Crédit Réglé
+                                    </span>
+                                    @if($v->date_paiement_credit)
+                                        <small class="d-block text-muted fs-7">Réglé le {{ $v->date_paiement_credit->format('d/m/Y') }}</small>
+                                    @endif
+                                @elseif($v->statut->value === 'PAYEE' || $v->statut === \App\Enums\StatutVente::PAYEE)
+                                    <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Payée (Comptant)</span>
+                                @elseif($v->statut->value === 'EN_ATTENTE' || $v->statut === \App\Enums\StatutVente::EN_ATTENTE)
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Crédit en attente</span>
                                 @else
-                                    <span class="badge bg-warning text-dark">En attente</span>
+                                    <span class="badge bg-secondary">Annulée</span>
                                 @endif
                             </td>
                             <td class="text-end">
