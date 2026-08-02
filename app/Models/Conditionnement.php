@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Conditionnement extends Model
 {
@@ -35,6 +36,40 @@ class Conditionnement extends Model
             'is_vente' => 'boolean',
             'is_par_defaut' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (Conditionnement $conditionnement) {
+            $conditionnement->syncPrixAchatFournisseurs();
+        });
+
+        static::updated(function (Conditionnement $conditionnement) {
+            if ($conditionnement->wasChanged('prix_achat')) {
+                $conditionnement->syncPrixAchatFournisseurs();
+            }
+        });
+    }
+
+    public function syncPrixAchatFournisseurs(): void
+    {
+        if ($this->prix_achat !== null && (float) $this->prix_achat > 0) {
+            $fournisseurs = Fournisseur::all();
+            foreach ($fournisseurs as $fournisseur) {
+                DB::table('fournisseur_produit')->updateOrInsert(
+                    [
+                        'fournisseur_id' => $fournisseur->id,
+                        'produit_id' => $this->produit_id,
+                        'conditionnement_id' => $this->id,
+                    ],
+                    [
+                        'prix_achat' => (float) $this->prix_achat,
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            }
+        }
     }
 
     public function produit(): BelongsTo

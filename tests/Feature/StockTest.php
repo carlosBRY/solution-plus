@@ -10,8 +10,9 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Permission::findOrCreate('gérer-stocks', 'web');
+    Permission::findOrCreate('ajuster-stock', 'web');
     $role = Role::findOrCreate('Gérant', 'web');
-    $role->givePermissionTo('gérer-stocks');
+    $role->givePermissionTo(['gérer-stocks', 'ajuster-stock']);
 });
 
 test('la page stocks index est accessible a un utilisateur autorise', function () {

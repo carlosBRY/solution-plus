@@ -14,12 +14,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-            CategorieSeeder::class,
-            FournisseurSeeder::class,
-            ClientSeeder::class,
-            ProduitSeeder::class,
-            StockSeeder::class,
-            ParametreSeeder::class,
+            // CategorieSeeder::class,
+            // FournisseurSeeder::class,
+            // ClientSeeder::class,
+            // ProduitSeeder::class,
+            // StockSeeder::class,
+            // ParametreSeeder::class,
+            // CompteFinancierSeeder::class,
         ]);
     }
 }

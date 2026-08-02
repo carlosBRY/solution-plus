@@ -39,6 +39,9 @@ class VenteService
 
             $vente = Vente::create([
                 'client_id' => $client?->id,
+                'client_comptant_nom' => empty($client) ? ($data['client_comptant_nom'] ?? null) : null,
+                'client_comptant_prenom' => empty($client) ? ($data['client_comptant_prenom'] ?? null) : null,
+                'client_comptant_contact' => empty($client) ? ($data['client_comptant_contact'] ?? null) : null,
                 'user_id' => $user->id,
                 'numero' => $numero,
                 'date' => $data['date'] ?? now(),
@@ -65,12 +68,31 @@ class VenteService
 
                 // Verrouiller le stock pour contrôle strict
                 $stock = Stock::where('produit_id', $produit->id)->lockForUpdate()->first();
+                $dispo = $stock?->quantite ?? 0;
 
-                if (! $stock || $stock->quantite < $quantiteUniteBase) {
-                    $dispo = $stock?->quantite ?? 0;
+                // 1. Règle absolue : Ne JAMAIS vendre plus que la quantité disponible physiquement en stock
+                if (! $stock || $dispo < $quantiteUniteBase) {
                     throw ValidationException::withMessages([
-                        'stock' => "Stock insuffisant pour '{$produit->nom}'. Disponible: {$dispo} {$produit->unite_base}(s), Requis: {$quantiteUniteBase}.",
+                        'stock' => "Stock insuffisant pour '{$produit->nom}'. Disponible en stock : {$dispo} {$produit->unite_base}(s), Requis pour cette vente : {$quantiteUniteBase}.",
                     ]);
+                }
+
+                // 2. Règle du stock minimum : Si le stock disponible est <= stock_min
+                if ($dispo <= $produit->stock_min) {
+                    $isAdmin = $user->hasRole('Administrateur');
+
+                    if (! $isAdmin) {
+                        throw ValidationException::withMessages([
+                            'stock' => "Le stock du produit '{$produit->nom}' ({$dispo} {$produit->unite_base}(s)) est inférieur ou égal au stock minimum de sécurité ({$produit->stock_min}). Seul un Administrateur est autorisé à effectuer cette vente.",
+                        ]);
+                    }
+
+                    $confirmationAdmin = ! empty($data['confirmer_vente_stock_min']);
+                    if (! $confirmationAdmin) {
+                        throw ValidationException::withMessages([
+                            'confirmer_vente_stock_min' => "Le produit '{$produit->nom}' a un stock actuel ({$dispo} {$produit->unite_base}(s)) inférieur ou égal au stock minimum ({$produit->stock_min}). En tant qu'Administrateur, vous devez cocher la case de confirmation pour débloquer cette vente.",
+                        ]);
+                    }
                 }
 
                 // Prix de vente fixé selon le paramétrage DB (non modifiable)

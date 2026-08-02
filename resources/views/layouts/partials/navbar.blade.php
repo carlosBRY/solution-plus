@@ -8,16 +8,10 @@
       <span></span>
       <span></span>
     </button>
-   <button class="profile-button ml-2" style="margin-left: 10px;" type="button" >
-          @php
-          $current_user = Auth::user();
-          @endphp
-          @if ($current_user)
-          
-          <span class="profile-name d-none d-sm-inline">{{ $current_user->name }}</span>
-          <span class="badge bg-success mt-1">{{ Auth::user()->roles->first()?->name ?? 'Utilisateur' }}</span>
-          @endif
-        </button>
+    @php $current_user = Auth::user(); @endphp
+    @if ($current_user)
+      <span class="badge bg-success ms-2 d-none d-md-inline-block">{{ $current_user->roles->first()?->name ?? 'Utilisateur' }}</span>
+    @endif
     
 
     <div class="navbar-actions ms-auto">

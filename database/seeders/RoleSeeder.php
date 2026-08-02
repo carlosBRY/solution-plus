@@ -19,6 +19,7 @@ class RoleSeeder extends Seeder
 
         // Create Permissions
         $permissions = [
+            // Modules de base
             'voir-dashboard',
             'gérer-utilisateurs',
             'gérer-produits',
@@ -32,6 +33,13 @@ class RoleSeeder extends Seeder
             'gérer-caisses',
             'gérer-depenses',
             'gérer-parametres',
+            'gérer-casiers',
+            // Fonctionnalités sensibles & sécurisées
+            'ajuster-stock',
+            'modifier-solde-compte',
+            'gérer-roles',
+            'valider-détérioration',
+            'annuler-vente',
         ];
 
         foreach ($permissions as $permission) {
@@ -55,6 +63,9 @@ class RoleSeeder extends Seeder
             'gérer-inventaires',
             'gérer-caisses',
             'gérer-depenses',
+            'gérer-casiers',
+            'ajuster-stock',
+            'valider-détérioration',
         ]);
 
         $caissier = Role::findOrCreate('Caissier', 'web');
@@ -72,6 +83,7 @@ class RoleSeeder extends Seeder
             'gérer-stocks',
             'gérer-inventaires',
             'gérer-approvisionnements',
+            'ajuster-stock',
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Enums\MouvementType;
 use App\Enums\StatutApprovisionnement;
+use App\Models\CompteFinancier;
 use App\Models\Conditionnement;
 use App\Models\Fournisseur;
 use App\Models\Produit;
@@ -86,4 +87,40 @@ test('peut receptionner un approvisionnement en attente', function () {
     // Stock = 5 + 10*1 = 15
     expect($stock->fresh()->quantite)->toBe(15);
     expect($approvisionnement->fresh()->statut)->toBe(StatutApprovisionnement::RECEPTIONNE);
+});
+
+test('refoule un approvisionnement si le solde du compte financier est insuffisant', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gérant');
+    $fournisseur = Fournisseur::factory()->create();
+    $produit = Produit::factory()->create();
+    $cond = Conditionnement::factory()->create(['produit_id' => $produit->id, 'prix_achat' => 50000]);
+    $compte = CompteFinancier::create([
+        'nom' => 'Banque Test',
+        'mode' => 'BANQUE_TEST',
+        'solde_initial' => 10000,
+        'solde_courant' => 10000,
+        'actif' => true,
+    ]);
+
+    $response = $this->actingAs($user)->post(route('approvisionnements.store'), [
+        'fournisseur_id' => $fournisseur->id,
+        'reference_facture' => 'FACT-TEST-SOLDE',
+        'compte_financier_id' => $compte->id,
+        'statut' => StatutApprovisionnement::RECEPTIONNE->value,
+        'items' => [
+            [
+                'produit_id' => $produit->id,
+                'conditionnement_id' => $cond->id,
+                'quantite_conditionnement' => 2, // Total = 2 * 50 000 = 100 000 FCFA > 10 000 FCFA (solde)
+                'prix_achat' => 50000,
+            ],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors(['compte_financier_id']);
+    expect((float) $compte->fresh()->solde_courant)->toBe(10000.0);
+    $this->assertDatabaseMissing('approvisionnements', [
+        'reference_facture' => 'FACT-TEST-SOLDE',
+    ]);
 });

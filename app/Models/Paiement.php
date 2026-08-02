@@ -18,6 +18,7 @@ class Paiement extends Model
         'montant',
         'reference',
         'date',
+        'compte_financier_id',
     ];
 
     protected function casts(): array

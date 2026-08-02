@@ -49,10 +49,8 @@
                             <tr>
                                 <th>Produit</th>
                                 <th>Conditionnement Utilisé</th>
-                                <th>Quantité Saise</th>
+                                <th>Quantité Saisie</th>
                                 <th>Équivalent en Stock</th>
-                                <th>Coût Unitaire</th>
-                                <th>Valeur Perte</th>
                                 <th>Cause</th>
                             </tr>
                         </thead>
@@ -71,18 +69,10 @@
                                         </span>
                                         <div class="small text-muted">(x{{ $detail->coefficient_conversion }})</div>
                                     </td>
-                                    <td>{{ number_format($detail->cout_unitaire, 0, ',', ' ') }} FCFA</td>
-                                    <td class="fw-bold text-danger">{{ number_format($detail->valeur_perte, 0, ',', ' ') }} FCFA</td>
                                     <td><span class="badge bg-warning-subtle text-warning-emphasis">{{ $detail->cause->value }}</span></td>
                                 </tr>
                             @endforeach
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="5" class="text-end fw-bold">Perte Totale Estimée :</td>
-                                <td colspan="2" class="fw-bold text-danger fs-5">{{ number_format($deterioration->total_perte, 0, ',', ' ') }} FCFA</td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </section>

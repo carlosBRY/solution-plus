@@ -38,7 +38,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-semibold">Conditionnement <span class="text-danger">*</span></label>
-                                    <select class="form-select form-select-sm cond-select" name="items[0][conditionnement_id]" required disabled>
+                                    <select class="form-select form-select-sm cond-select ts-ignore" name="items[0][conditionnement_id]" required disabled>
                                         <option value="">Choisir produit</option>
                                     </select>
                                 </div>
@@ -109,7 +109,7 @@
                     }
 
                     const produit = produitsData.find(p => p.id === produitId);
-                    if (produit && produit.conditionnements) {
+                    if (produit && produit.conditionnements && produit.conditionnements.length > 0) {
                         produit.conditionnements.forEach(c => {
                             const opt = document.createElement('option');
                             opt.value = c.id;
@@ -117,6 +117,9 @@
                             condSelect.appendChild(opt);
                         });
                         condSelect.disabled = false;
+                    } else {
+                        condSelect.innerHTML = '<option value="">Aucun conditionnement configuré</option>';
+                        condSelect.disabled = true;
                     }
                 });
             }
@@ -142,7 +145,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small fw-semibold">Conditionnement <span class="text-danger">*</span></label>
-                            <select class="form-select form-select-sm cond-select" name="items[${itemIndex}][conditionnement_id]" required disabled>
+                            <select class="form-select form-select-sm cond-select ts-ignore" name="items[${itemIndex}][conditionnement_id]" required disabled>
                                 <option value="">Choisir produit</option>
                             </select>
                         </div>

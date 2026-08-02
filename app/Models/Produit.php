@@ -56,6 +56,13 @@ class Produit extends Model
         return $this->hasMany(Conditionnement::class);
     }
 
+    public function fournisseurs()
+    {
+        return $this->belongsToMany(Fournisseur::class, 'fournisseur_produit')
+            ->withPivot('prix_achat')
+            ->withTimestamps();
+    }
+
     /**
      * Retourne le conditionnement par défaut (Bouteille) pour ce produit.
      */
@@ -87,5 +94,42 @@ class Produit extends Model
     public function deteriorationDetails(): HasMany
     {
         return $this->hasMany(DeteriorationDetail::class);
+    }
+
+    /**
+     * Retourne le plus petit conditionnement de type caisse/carton (quantite_unite_base > 1).
+     */
+    public function plusPetitConditionnementCasier(): ?Conditionnement
+    {
+        return $this->conditionnements
+            ->where('quantite_unite_base', '>', 1)
+            ->sortBy('quantite_unite_base')
+            ->first();
+    }
+
+    /**
+     * Formate l'affichage du stock en caisses (selon le plus petit conditionnement > 1) + bouteilles restantes et total.
+     * Exemple : "4 Caisse de 12 + 2 bts (50 bouteilles)" ou "50 bouteilles".
+     */
+    public function getStockFormateAttribute(): string
+    {
+        $qteTotal = (int) ($this->stock?->quantite ?? 0);
+        $casierCond = $this->plusPetitConditionnementCasier();
+
+        if (! $casierCond || $casierCond->quantite_unite_base <= 1) {
+            return "{$qteTotal} {$this->unite_base}(s)";
+        }
+
+        $capacite = (int) $casierCond->quantite_unite_base;
+        $nbCaisses = (int) floor($qteTotal / $capacite);
+        $nbBtsRestantes = $qteTotal % $capacite;
+
+        if ($nbCaisses > 0 && $nbBtsRestantes > 0) {
+            return "{$nbCaisses} {$casierCond->nom} + {$nbBtsRestantes} bts ({$qteTotal} {$this->unite_base}s)";
+        } elseif ($nbCaisses > 0) {
+            return "{$nbCaisses} {$casierCond->nom} ({$qteTotal} {$this->unite_base}s)";
+        } else {
+            return "{$nbBtsRestantes} {$this->unite_base}(s)";
+        }
     }
 }

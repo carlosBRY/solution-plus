@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fournisseur;
+use App\Models\Produit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,14 +55,48 @@ class FournisseurController extends Controller
     }
 
     /**
-     * Affiche la fiche détaillée d'un fournisseur avec son historique d'approvisionnements.
+     * Affiche la fiche détaillée d'un fournisseur avec son historique d'approvisionnements et ses tarifs par conditionnement.
      */
     public function show(Fournisseur $fournisseur): View
     {
-        $fournisseur->load(['approvisionnements' => fn ($q) => $q->latest('date')->take(10)]);
+        $fournisseur->load([
+            'approvisionnements' => fn ($q) => $q->latest('date')->take(10),
+            'tarifs',
+        ]);
         $totalApprovisionnementsVal = $fournisseur->approvisionnements()->sum('total');
+        $produitsWithConds = Produit::with('conditionnements')->orderBy('nom')->get();
 
-        return view('fournisseurs.show', compact('fournisseur', 'totalApprovisionnementsVal'));
+        return view('fournisseurs.show', compact('fournisseur', 'totalApprovisionnementsVal', 'produitsWithConds'));
+    }
+
+    /**
+     * Enregistre ou met à jour les tarifs d'achat par conditionnement pour ce fournisseur.
+     */
+    public function updateTarifs(Request $request, Fournisseur $fournisseur): RedirectResponse
+    {
+        $validated = $request->validate([
+            'tarifs' => ['nullable', 'array'],
+            'tarifs.*.produit_id' => ['required', 'exists:produits,id'],
+            'tarifs.*.conditionnement_id' => ['required', 'exists:conditionnements,id'],
+            'tarifs.*.prix_achat' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $syncData = [];
+        if (! empty($validated['tarifs'])) {
+            foreach ($validated['tarifs'] as $tarif) {
+                if (isset($tarif['prix_achat']) && $tarif['prix_achat'] !== '' && $tarif['prix_achat'] !== null && (float) $tarif['prix_achat'] > 0) {
+                    $syncData[$tarif['conditionnement_id']] = [
+                        'produit_id' => $tarif['produit_id'],
+                        'prix_achat' => (float) $tarif['prix_achat'],
+                    ];
+                }
+            }
+        }
+
+        $fournisseur->tarifs()->sync($syncData);
+
+        return redirect()->route('fournisseurs.show', $fournisseur)
+            ->with('success', "Grille tarifaire des conditionnements mise à jour pour '{$fournisseur->nom}'.");
     }
 
     /**

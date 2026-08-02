@@ -53,6 +53,13 @@
     </a>
     @endcan
 
+    @can('gérer-casiers')
+    <a class="nav-link {{ request()->routeIs('casiers.*') ? 'active' : '' }}" href="{{ route('casiers.index') }}">
+      <span class="nav-icon"><i class="bi bi-box-seam-fill" aria-hidden="true"></i></span>
+      <span class="nav-text">Casiers & Bouteilles</span>
+    </a>
+    @endcan
+
     @can('gérer-approvisionnements')
     <a class="nav-link {{ request()->routeIs('approvisionnements.*') ? 'active' : '' }}" href="{{ route('approvisionnements.index') }}">
       <span class="nav-icon"><i class="bi bi-truck" aria-hidden="true"></i></span>

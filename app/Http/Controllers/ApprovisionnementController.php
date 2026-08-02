@@ -65,12 +65,20 @@ class ApprovisionnementController extends Controller
      */
     public function create(): View
     {
-        $fournisseurs = Fournisseur::orderBy('nom')->get();
-        $produits = Produit::with(['conditionnements', 'stock'])->where('actif', true)->orderBy('nom')->get();
+        $fournisseurs = Fournisseur::with('tarifs')->orderBy('nom')->get();
+        $produits = Produit::with(['conditionnements', 'stock'])->orderBy('nom')->get();
         $statuts = StatutApprovisionnement::cases();
         $comptes = CompteFinancier::actif()->orderBy('nom')->get();
 
-        return view('approvisionnements.create', compact('fournisseurs', 'produits', 'statuts', 'comptes'));
+        $tarifsFournisseurs = [];
+        foreach ($fournisseurs as $f) {
+            $tarifsFournisseurs[$f->id] = [];
+            foreach ($f->tarifs as $c) {
+                $tarifsFournisseurs[$f->id][$c->id] = (float) $c->pivot->prix_achat;
+            }
+        }
+
+        return view('approvisionnements.create', compact('fournisseurs', 'produits', 'statuts', 'comptes', 'tarifsFournisseurs'));
     }
 
     /**

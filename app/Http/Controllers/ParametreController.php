@@ -9,6 +9,7 @@ use App\Models\Produit;
 use App\Services\CompteFinancierService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -250,6 +251,8 @@ class ParametreController extends Controller
      */
     public function initialiserSolde(Request $request, CompteFinancier $compte, CompteFinancierService $service): RedirectResponse
     {
+        Gate::authorize('modifier-solde-compte');
+
         $validated = $request->validate([
             'solde' => ['required', 'numeric', 'min:0'],
         ]);

@@ -103,6 +103,106 @@
                     </table>
                 </div>
             </section>
+
+            {{-- Grille Tarifaire par Conditionnement --}}
+            <section class="panel mt-4">
+                <div class="panel-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h2 class="h5 mb-0 section-title"><i class="bi bi-tags me-2"></i>Grille Tarifaire par Conditionnement</h2>
+                        <small class="text-muted">Définissez le prix d'achat pratiqué par {{ $fournisseur->nom }} pour chaque conditionnement (Bouteille, Casier, Pack...).</small>
+                    </div>
+                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchTarifInput" class="form-control" placeholder="Rechercher un produit / conditionnement...">
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('fournisseurs.tarifs.update', $fournisseur) }}">
+                    @csrf
+                    <div class="table-responsive mb-3">
+                        <table class="table table-hover align-middle mb-0" id="tableTarifsFournisseur">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produit & Conditionnement</th>
+                                    <th>Contenance</th>
+                                    <th>Prix Achat Standard</th>
+                                    <th>Prix Achat chez {{ $fournisseur->nom }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $tarifsMap = $fournisseur->tarifs->keyBy('id');
+                                    $flatIndex = 0;
+                                @endphp
+                                @forelse($produitsWithConds as $prod)
+                                    @foreach($prod->conditionnements as $cond)
+                                        @php
+                                            $prixFournisseur = isset($tarifsMap[$cond->id]) ? $tarifsMap[$cond->id]->pivot->prix_achat : null;
+                                            $prixParDefaut = $cond->prix_achat ?: ($prod->prix_achat * $cond->quantite_unite_base);
+                                        @endphp
+                                        <tr>
+                                            <td>
+                                                <span class="fw-semibold text-primary produit-nom">{{ $prod->nom }}</span>
+                                                <span class="badge bg-secondary-subtle text-secondary ms-1 cond-nom">{{ $cond->nom }}</span>
+                                                <input type="hidden" name="tarifs[{{ $flatIndex }}][produit_id]" value="{{ $prod->id }}">
+                                                <input type="hidden" name="tarifs[{{ $flatIndex }}][conditionnement_id]" value="{{ $cond->id }}">
+                                            </td>
+                                            <td>
+                                                <span class="small text-muted">{{ $cond->quantite_unite_base }} {{ $prod->unite_base }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted small">{{ number_format($prixParDefaut, 0, ',', ' ') }} FCFA</span>
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-group-sm" style="max-width: 220px;">
+                                                    <input type="number" step="0.01" min="0" class="form-control" name="tarifs[{{ $flatIndex }}][prix_achat]" value="{{ $prixFournisseur ?? '' }}" placeholder="{{ number_format($prixParDefaut, 0, ',', ' ') }}">
+                                                    <span class="input-group-text">FCFA</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @php $flatIndex++; @endphp
+                                    @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">Aucun produit ou conditionnement disponible.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i> Enregistrer la Grille Tarifaire
+                        </button>
+                    </div>
+                </form>
+            </section>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchTarifInput');
+            const tableBody = document.querySelector('#tableTarifsFournisseur tbody');
+
+            if (searchInput && tableBody) {
+                searchInput.addEventListener('input', function() {
+                    const filter = this.value.toLowerCase().trim();
+                    const rows = tableBody.querySelectorAll('tr');
+
+                    rows.forEach(row => {
+                        const produitNom = row.querySelector('.produit-nom')?.textContent.toLowerCase() || '';
+                        const condNom = row.querySelector('.cond-nom')?.textContent.toLowerCase() || '';
+                        const text = produitNom + ' ' + condNom;
+
+                        if (!filter || text.includes(filter)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
 </x-app-layout>

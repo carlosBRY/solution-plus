@@ -3,6 +3,7 @@
 use App\Models\CompteFinancier;
 use App\Models\User;
 use App\Services\CompteFinancierService;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -127,4 +128,36 @@ test('peut ajouter un nouveau compte financier via les parametres', function () 
         'mode' => 'WAVE',
         'solde_courant' => 25000,
     ]);
+});
+
+test('refoule le debit d un compte si le solde est insuffisant', function () {
+    $user = User::factory()->create();
+    $compte = CompteFinancier::create([
+        'nom' => 'Compte Pauvre',
+        'mode' => 'PAUVRE',
+        'solde_initial' => 2000,
+        'solde_courant' => 2000,
+        'actif' => true,
+    ]);
+
+    $service = app(CompteFinancierService::class);
+
+    expect(fn () => $service->debiter($compte, $user, 5000, 'Achat impossible'))
+        ->toThrow(ValidationException::class);
+
+    expect((float) $compte->fresh()->solde_courant)->toBe(2000.0);
+});
+
+test('refoule le transfert entre comptes si le solde du compte source est insuffisant', function () {
+    $user = User::factory()->create();
+    $source = CompteFinancier::create(['nom' => 'Source Insuffisante', 'mode' => 'SRC_INSUFF', 'solde_courant' => 3000, 'actif' => true]);
+    $dest = CompteFinancier::create(['nom' => 'Destination Test', 'mode' => 'DEST_INSUFF', 'solde_courant' => 5000, 'actif' => true]);
+
+    $service = app(CompteFinancierService::class);
+
+    expect(fn () => $service->transferer($source, $dest, $user, 10000, 'Transfert trop grand'))
+        ->toThrow(ValidationException::class);
+
+    expect((float) $source->fresh()->solde_courant)->toBe(3000.0);
+    expect((float) $dest->fresh()->solde_courant)->toBe(5000.0);
 });

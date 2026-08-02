@@ -1,16 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 invoice-actions-header">
             <div>
-                <p class="eyebrow mb-1 text-muted">Reçu de Vente</p>
-                <h1 class="h3 mb-0">Ticket {{ $vente->numero }}</h1>
+                <p class="eyebrow mb-1 text-muted">Document Commercial</p>
+                <h1 class="h3 mb-0">Facture / Reçu N° {{ $vente->numero }}</h1>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
                 <a class="btn btn-outline-secondary btn-sm" href="{{ route('ventes.index') }}">
                     <i class="bi bi-arrow-left me-1"></i> Retour aux Ventes
                 </a>
-                <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
-                    <i class="bi bi-printer me-1"></i> Imprimer le Reçu
+                <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> Imprimer la Facture / Reçu
                 </button>
             </div>
         </div>
@@ -18,144 +18,299 @@
 
     {{-- Flash Messages --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-4 invoice-no-print" role="alert">
             <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <div class="row g-3">
-        <div class="col-12 col-xl-8">
-            <section class="panel">
-                <div class="panel-header">
-                    <h2 class="h5 mb-0 section-title"><i class="bi bi-receipt me-2"></i>Détail du Ticket de Vente</h2>
+    {{-- Feuille / Facture Professionnelle Unifiée --}}
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="card border-0 shadow-sm invoice-paper p-4 p-md-5 bg-white">
+                
+                {{-- En-tête de la Facture --}}
+                <div class="row pb-4 mb-4 border-bottom align-items-start">
+                    <div class="col-12 col-md-7 mb-3 mb-md-0">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            @if($parametre->logo)
+                                <img src="{{ asset('storage/' . $parametre->logo) }}" alt="{{ $parametre->nom_cave }}" style="max-height: 50px;" class="mb-1">
+                            @else
+                                <div class="badge bg-primary p-2 rounded fs-4 text-white">
+                                    <i class="bi bi-shop"></i>
+                                </div>
+                            @endif
+                            <div>
+                                <h3 class="fw-bold mb-0 text-primary text-uppercase letter-spacing-1">{{ $parametre->nom_cave }}</h3>
+                                <span class="small text-muted fw-semibold">Gestion Commerciale & Point de Vente</span>
+                            </div>
+                        </div>
+                        <div class="small text-muted ms-1">
+                            @if($parametre->adresse)
+                                <div><i class="bi bi-geo-alt me-1 text-secondary"></i>{{ $parametre->adresse }}</div>
+                            @endif
+                            @if($parametre->telephone)
+                                <div><i class="bi bi-telephone me-1 text-secondary"></i>Tél: {{ $parametre->telephone }}</div>
+                            @endif
+                            @if($parametre->email)
+                                <div><i class="bi bi-envelope me-1 text-secondary"></i>Email: {{ $parametre->email }}</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-5 text-md-end">
+                        <div class="bg-light p-3 rounded border text-start text-md-end">
+                            <h4 class="fw-extrabold text-dark mb-1">FACTURE / REÇU</h4>
+                            <div class="fw-bold fs-5 text-primary mb-2">N° {{ $vente->numero }}</div>
+                            <div class="small text-secondary mb-1">
+                                <strong>Date :</strong> {{ $vente->date->format('d/m/Y H:i') }}
+                            </div>
+                            <div class="small text-secondary">
+                                <strong>Caissier / Vendeur :</strong> {{ $vente->user->name }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
+                {{-- Informations Client & Statut --}}
+                <div class="row mb-4">
+                    <div class="col-12 col-md-7 mb-3 mb-md-0">
+                        <div class="p-3 bg-light-subtle rounded border h-100">
+                            <h6 class="text-uppercase small fw-bold text-muted mb-2">
+                                <i class="bi bi-person me-1"></i>Facturé à (Client)
+                            </h6>
+                            <div class="fw-bold fs-6 text-dark">
+                                @if($vente->client)
+                                    {{ $vente->client->nom }} {{ $vente->client->prenom }}
+                                @elseif($vente->client_comptant_nom || $vente->client_comptant_prenom)
+                                    {{ trim($vente->client_comptant_nom . ' ' . $vente->client_comptant_prenom) }}
+                                @else
+                                    Client Comptant (Passant)
+                                @endif
+                            </div>
+                            @if($vente->client?->telephone || $vente->client_comptant_contact)
+                                <div class="small text-muted mt-1">
+                                    <i class="bi bi-telephone me-1"></i>Contact : {{ $vente->client?->telephone ?? $vente->client_comptant_contact }}
+                                </div>
+                            @endif
+                            @if($vente->client?->adresse)
+                                <div class="small text-muted">
+                                    <i class="bi bi-geo-alt me-1"></i>Adresse : {{ $vente->client->adresse }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-md-5">
+                        <div class="p-3 bg-light-subtle rounded border h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="text-uppercase small fw-bold text-muted mb-2">
+                                    <i class="bi bi-info-circle me-1"></i>Statut du Règlement
+                                </h6>
+                                <div>
+                                    @if($vente->statut->value === 'PAYEE_CREDIT' || $vente->statut === \App\Enums\StatutVente::PAYEE_CREDIT)
+                                        <span class="badge bg-info text-dark px-3 py-2 fs-6">
+                                            <i class="bi bi-check-all me-1"></i>CRÉDIT RÉGLÉ
+                                        </span>
+                                    @elseif($vente->statut->value === 'PAYEE' || $vente->statut === \App\Enums\StatutVente::PAYEE)
+                                        <span class="badge bg-success px-3 py-2 fs-6">
+                                            <i class="bi bi-check-circle-fill me-1"></i>PAYÉE (COMPTANT)
+                                        </span>
+                                    @elseif($vente->statut->value === 'EN_ATTENTE' || $vente->statut === \App\Enums\StatutVente::EN_ATTENTE)
+                                        <span class="badge bg-warning text-dark px-3 py-2 fs-6">
+                                            <i class="bi bi-clock-history me-1"></i>CRÉDIT EN ATTENTE
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary px-3 py-2 fs-6">
+                                            ANNULÉE
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                Mode(s) : 
+                                @foreach($vente->paiements as $p)
+                                    <span class="badge bg-light text-dark border">{{ $p->mode }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Tableau des Articles --}}
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle text-sm mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Produit</th>
+                                <th class="text-center" style="width: 40px;">#</th>
+                                <th>Désignation Produit</th>
                                 <th>Conditionnement</th>
-                                <th>Qté Cond.</th>
-                                <th>Équivalent Stock</th>
-                                <th>Prix Unit.</th>
-                                <th>Remise</th>
-                                <th>Total Ligne</th>
+                                <th class="text-center">Qté</th>
+                                <th class="text-end">Prix Unit.</th>
+                                <th class="text-end">Remise</th>
+                                <th class="text-end">Total Ligne</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($vente->details as $detail)
+                            @foreach($vente->details as $index => $detail)
                                 <tr>
+                                    <td class="text-center text-muted fw-semibold">{{ $index + 1 }}</td>
                                     <td>
-                                        <div class="fw-bold">{{ $detail->produit->nom }}</div>
+                                        <div class="fw-bold text-dark">{{ $detail->produit->nom }}</div>
                                         <small class="text-muted">{{ $detail->produit->unite_base }}</small>
                                     </td>
-                                    <td><span class="badge bg-light text-body border">{{ $detail->conditionnement?->nom ?? '—' }}</span></td>
-                                    <td class="fw-bold">{{ $detail->quantite_conditionnement ?? $detail->quantite }}</td>
                                     <td>
-                                        <span class="badge bg-danger-subtle text-danger">
-                                            -{{ $detail->quantite }} {{ $detail->produit->unite_base }}(s)
+                                        <span class="badge bg-light text-body border fw-normal">
+                                            {{ $detail->conditionnement?->nom ?? 'Unité' }}
                                         </span>
                                     </td>
-                                    <td>{{ number_format($detail->prix, 0, ',', ' ') }} FCFA</td>
-                                    <td>{{ $detail->remise > 0 ? number_format($detail->remise, 0, ',', ' ') . ' FCFA' : '—' }}</td>
-                                    <td class="fw-bold text-success">{{ number_format($detail->total, 0, ',', ' ') }} FCFA</td>
+                                    <td class="text-center fw-bold fs-6">
+                                        {{ $detail->quantite_conditionnement ?? $detail->quantite }}
+                                    </td>
+                                    <td class="text-end fw-semibold">
+                                        {{ number_format($detail->prix, 0, ',', ' ') }} FCFA
+                                    </td>
+                                    <td class="text-end text-muted">
+                                        {{ $detail->remise > 0 ? number_format($detail->remise, 0, ',', ' ') . ' FCFA' : '—' }}
+                                    </td>
+                                    <td class="text-end fw-bold text-dark">
+                                        {{ number_format($detail->total, 0, ',', ' ') }} FCFA
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="6" class="text-end fw-bold">Sous-total :</td>
-                                <td class="fw-bold">{{ number_format($vente->sous_total, 0, ',', ' ') }} FCFA</td>
-                            </tr>
-                            @if($vente->remise > 0)
-                                <tr>
-                                    <td colspan="6" class="text-end text-muted">Remise globale :</td>
-                                    <td class="text-danger">-{{ number_format($vente->remise, 0, ',', ' ') }} FCFA</td>
-                                </tr>
-                            @endif
-                            @if($vente->tva > 0)
-                                <tr>
-                                    <td colspan="6" class="text-end text-muted">TVA :</td>
-                                    <td>+{{ number_format($vente->tva, 0, ',', ' ') }} FCFA</td>
-                                </tr>
-                            @endif
-                            <tr class="table-success">
-                                <td colspan="6" class="text-end fw-bold fs-5">Total à Payer :</td>
-                                <td class="fw-bold text-success fs-5">{{ number_format($vente->total, 0, ',', ' ') }} FCFA</td>
-                            </tr>
-                            <tr>
-                                <td colspan="6" class="text-end fw-semibold">Montant Reçu :</td>
-                                <td class="fw-bold">{{ number_format($vente->montant_paye, 0, ',', ' ') }} FCFA</td>
-                            </tr>
-                            @if($vente->monnaie > 0)
-                                <tr>
-                                    <td colspan="6" class="text-end fw-semibold">Monnaie Rendue :</td>
-                                    <td class="fw-bold text-primary">{{ number_format($vente->monnaie, 0, ',', ' ') }} FCFA</td>
-                                </tr>
-                            @endif
-                        </tfoot>
                     </table>
                 </div>
-            </section>
-        </div>
 
-        <div class="col-12 col-xl-4">
-            <div class="panel mb-3">
-                <h2 class="h5 mb-3 section-title"><i class="bi bi-info-circle me-2"></i>Détails de la Transaction</h2>
-                <ul class="list-group list-group-flush small">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span class="text-muted">N° Ticket</span>
-                        <span class="fw-bold">{{ $vente->numero }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span class="text-muted">Client</span>
-                        <span>{{ $vente->client ? $vente->client->nom . ' ' . $vente->client->prenom : 'Client Comptant' }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span class="text-muted">Vendeur</span>
-                        <span>{{ $vente->user->name }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span class="text-muted">Date</span>
-                        <span>{{ $vente->date->format('d/m/Y H:i') }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span class="text-muted">Statut</span>
-                        @if($vente->statut->value === 'PAYEE_CREDIT' || $vente->statut === \App\Enums\StatutVente::PAYEE_CREDIT)
-                            <span class="badge bg-info text-dark">CRÉDIT RÉGLÉ</span>
-                        @elseif($vente->statut->value === 'PAYEE' || $vente->statut === \App\Enums\StatutVente::PAYEE)
-                            <span class="badge bg-success">PAYÉE (COMPTANT)</span>
-                        @elseif($vente->statut->value === 'EN_ATTENTE' || $vente->statut === \App\Enums\StatutVente::EN_ATTENTE)
-                            <span class="badge bg-warning text-dark">CRÉDIT EN ATTENTE</span>
-                        @else
-                            <span class="badge bg-secondary">ANNULÉE</span>
-                        @endif
-                    </li>
-                    @if($vente->date_paiement_credit)
-                        <li class="list-group-item d-flex justify-content-between bg-info-subtle">
-                            <span class="fw-semibold text-dark"><i class="bi bi-calendar-check me-1"></i>Date Règlement Crédit</span>
-                            <span class="fw-bold text-dark">{{ $vente->date_paiement_credit->format('d/m/Y H:i') }}</span>
-                        </li>
-                    @endif
-                </ul>
-            </div>
-
-            <div class="panel">
-                <h2 class="h5 mb-3 section-title"><i class="bi bi-cash-coin me-2"></i>Règlement(s)</h2>
-                @forelse($vente->paiements as $paiement)
-                    <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-2 bg-light-subtle">
-                        <div>
-                            <span class="badge bg-primary-subtle text-primary me-1">{{ $paiement->mode }}</span>
-                            <small class="text-muted">{{ $paiement->date->format('d/m/Y H:i') }}</small>
+                {{-- Décomposition Financière & Encaissement Caisse --}}
+                <div class="row mb-4">
+                    <div class="col-12 col-md-6 mb-3 mb-md-0">
+                        <div class="p-3 border rounded bg-light-subtle h-100">
+                            <h6 class="fw-bold small text-muted text-uppercase mb-2">
+                                <i class="bi bi-journal-text me-1"></i>Notes & Conditions
+                            </h6>
+                            <p class="small text-muted mb-2">
+                                {{ $parametre->message_ticket ?? 'Merci de votre confiance et de votre fidélité !' }}
+                            </p>
+                            <div class="small text-secondary fst-italic border-top pt-2 mt-2">
+                                <i class="bi bi-shield-exclamation me-1"></i>Les marchandises vendues ne sont ni reprises ni échangées.
+                            </div>
                         </div>
-                        <span class="fw-bold text-success">{{ number_format($paiement->montant, 0, ',', ' ') }} FCFA</span>
                     </div>
-                @empty
-                    <p class="text-muted small">Aucun règlement enregistré.</p>
-                @endforelse
+
+                    <div class="col-12 col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="text-end text-muted fw-semibold">Sous-total :</td>
+                                        <td class="text-end fw-bold" style="width: 140px;">{{ number_format($vente->sous_total, 0, ',', ' ') }} FCFA</td>
+                                    </tr>
+                                    @if($vente->remise > 0)
+                                        <tr>
+                                            <td class="text-end text-muted">Remise globale :</td>
+                                            <td class="text-end text-danger fw-bold">-{{ number_format($vente->remise, 0, ',', ' ') }} FCFA</td>
+                                        </tr>
+                                    @endif
+                                    @if($vente->tva > 0)
+                                        <tr>
+                                            <td class="text-end text-muted">TVA :</td>
+                                            <td class="text-end text-dark fw-bold">+{{ number_format($vente->tva, 0, ',', ' ') }} FCFA</td>
+                                        </tr>
+                                    @endif
+                                    <tr class="border-top border-2">
+                                        <td class="text-end fw-extrabold fs-5 text-dark">TOTAL NET À PAYER :</td>
+                                        <td class="text-end fw-extrabold fs-5 text-primary">{{ number_format($vente->total, 0, ',', ' ') }} FCFA</td>
+                                    </tr>
+                                    <tr class="bg-light">
+                                        <td class="text-end fw-semibold text-secondary">Montant Remis par Client :</td>
+                                        <td class="text-end fw-bold text-dark">{{ number_format($vente->montant_paye, 0, ',', ' ') }} FCFA</td>
+                                    </tr>
+                                    @if($vente->monnaie > 0)
+                                        <tr class="bg-light">
+                                            <td class="text-end fw-semibold text-secondary">Monnaie Rendue au Client :</td>
+                                            <td class="text-end fw-bold text-danger">-{{ number_format($vente->monnaie, 0, ',', ' ') }} FCFA</td>
+                                        </tr>
+                                    @endif
+                                    <tr class="table-success border-top border-success">
+                                        <td class="text-end fw-bold text-success fs-6">
+                                            <i class="bi bi-wallet2 me-1"></i>Net Encaissé en Caisse :
+                                        </td>
+                                        <td class="text-end fw-extrabold text-success fs-6">
+                                            {{ number_format($vente->montant_encaisse, 0, ',', ' ') }} FCFA
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Signatures & Cachet --}}
+                <div class="row pt-4 mt-4 border-top text-center d-none d-print-flex invoice-signatures">
+                    <div class="col-6">
+                        <div class="small fw-bold text-muted mb-5">Signature & Cachet du Client</div>
+                        <div class="border-bottom mx-auto" style="width: 180px;"></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small fw-bold text-muted mb-5">Signature & Cachet de la Cave</div>
+                        <div class="border-bottom mx-auto" style="width: 180px;"></div>
+                    </div>
+                </div>
+
+                <div class="text-center pt-3 text-muted small border-top mt-4">
+                    <i class="bi bi-check-circle me-1"></i>Document officiel généré par <strong>{{ $parametre->nom_cave }}</strong> — Solution Plus
+                </div>
+
             </div>
         </div>
     </div>
+
+    {{-- Styles d'impression propres (@media print) --}}
+    <style>
+        @media print {
+            /* Masquer l'ensemble des éléments de l'application web */
+            .admin-sidebar,
+            .sidebar-backdrop,
+            .admin-navbar,
+            .admin-footer,
+            .invoice-actions-header,
+            .invoice-no-print,
+            .page-heading,
+            nav,
+            header,
+            footer,
+            button {
+                display: none !important;
+            }
+
+            /* Réinitialiser les fonds et conteneurs pour une feuille A4 pure */
+            body, html, .admin-shell, .admin-main, .dashboard-content, .container-fluid {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+
+            .invoice-paper {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .invoice-signatures {
+                display: flex !important;
+            }
+
+            /* Forcer le rendu exact des couleurs et bordures à l'impression */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
 </x-app-layout>

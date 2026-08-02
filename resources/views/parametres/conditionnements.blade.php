@@ -37,6 +37,13 @@
                 </a>
             </li>
         @endcan
+        @can('gérer-roles')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('parametres.roles.index') }}">
+                    <i class="bi bi-shield-lock me-1"></i> Rôles & Permissions
+                </a>
+            </li>
+        @endcan
     </ul>
 
     {{-- Flash Messages --}}

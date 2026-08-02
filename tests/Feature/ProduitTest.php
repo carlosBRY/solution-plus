@@ -2,6 +2,9 @@
 
 use App\Enums\MouvementType;
 use App\Models\Categorie;
+use App\Models\Conditionnement;
+use App\Models\Produit;
+use App\Models\Stock;
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -43,4 +46,18 @@ test('user can create a product with initial stock', function () {
         'type' => MouvementType::STOCK_INITIAL->value,
         'quantite' => 12,
     ]);
+});
+
+test('calcule correctement le stock formate en caisses et bouteilles restantes', function () {
+    $produit = Produit::factory()->create(['unite_base' => 'Bouteille']);
+    Stock::create(['produit_id' => $produit->id, 'quantite' => 50]);
+
+    Conditionnement::create([
+        'produit_id' => $produit->id,
+        'nom' => 'Caisse de 12',
+        'quantite_unite_base' => 12,
+        'prix_vente' => 12000,
+    ]);
+
+    expect($produit->refresh()->stock_formate)->toBe('4 Caisse de 12 + 2 bts (50 Bouteilles)');
 });

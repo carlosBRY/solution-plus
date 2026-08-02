@@ -8,6 +8,7 @@ use App\Models\Approvisionnement;
 use App\Models\CompteFinancier;
 use App\Models\Conditionnement;
 use App\Models\DetailApprovisionnement;
+use App\Models\Fournisseur;
 use App\Models\MouvementStock;
 use App\Models\Produit;
 use App\Models\Stock;
@@ -70,6 +71,17 @@ class ApprovisionnementService
 
                 $totalLigne = $quantiteCond * $prixAchat;
                 $montantSousTotal += $totalLigne;
+
+                // Mettre à jour le tarif d'achat de ce fournisseur pour ce conditionnement
+                $fournisseur = Fournisseur::find($approvisionnement->fournisseur_id);
+                if ($fournisseur) {
+                    $fournisseur->tarifs()->syncWithoutDetaching([
+                        $conditionnement->id => [
+                            'produit_id' => $produit->id,
+                            'prix_achat' => $prixAchat,
+                        ],
+                    ]);
+                }
 
                 DetailApprovisionnement::create([
                     'approvisionnement_id' => $approvisionnement->id,

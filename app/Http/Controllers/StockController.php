@@ -9,6 +9,7 @@ use App\Models\Stock;
 use App\Services\StockService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class StockController extends Controller
@@ -77,6 +78,8 @@ class StockController extends Controller
      */
     public function ajuster(Request $request, Produit $produit): RedirectResponse
     {
+        Gate::authorize('ajuster-stock');
+
         $validated = $request->validate([
             'quantite' => ['required', 'integer', 'min:0'],
             'motif' => ['required', 'string', 'max:255'],

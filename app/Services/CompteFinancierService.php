@@ -77,6 +77,15 @@ class CompteFinancierService
         return DB::transaction(function () use ($compte, $user, $montant, $motif, $referenceId, $referenceType) {
             $compteLock = CompteFinancier::where('id', $compte->id)->lockForUpdate()->first();
             $soldeAvant = (float) $compteLock->solde_courant;
+
+            if ($soldeAvant < $montant) {
+                $soldeFormate = number_format($soldeAvant, 0, ',', ' ');
+                $montantFormate = number_format($montant, 0, ',', ' ');
+                throw ValidationException::withMessages([
+                    'compte_financier_id' => "Solde insuffisant sur le compte '{$compteLock->nom}'. Solde disponible : {$soldeFormate} FCFA, Montant requis : {$montantFormate} FCFA.",
+                ]);
+            }
+
             $soldeApres = $soldeAvant - $montant;
 
             $compteLock->update(['solde_courant' => $soldeApres]);
@@ -126,6 +135,15 @@ class CompteFinancierService
             // Débiter la source
             $sourceLock = CompteFinancier::where('id', $source->id)->lockForUpdate()->first();
             $soldeAvantSource = (float) $sourceLock->solde_courant;
+
+            if ($soldeAvantSource < $montant) {
+                $soldeFormate = number_format($soldeAvantSource, 0, ',', ' ');
+                $montantFormate = number_format($montant, 0, ',', ' ');
+                throw ValidationException::withMessages([
+                    'montant' => "Solde insuffisant sur le compte source '{$sourceLock->nom}'. Solde disponible : {$soldeFormate} FCFA, Montant du transfert : {$montantFormate} FCFA.",
+                ]);
+            }
+
             $soldeApresSource = $soldeAvantSource - $montant;
 
             $sourceLock->update(['solde_courant' => $soldeApresSource]);

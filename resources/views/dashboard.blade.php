@@ -1,13 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="d-flex justify-content-between ">
-            <div style="margin-right: 100px;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
                 <p class="eyebrow mb-1 text-muted">Vue d'ensemble commerciale</p>
                 <h1 class="h3 mb-0">Tableau de bord - {{ $parametre->nom_cave }}</h1>
             </div>
-            <div class="d-flex gap-2 align-items-baseline">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
                 <button class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i> Exporter Rapport</button>
-                <button class="btn btn-primary btn-sm"><i class="bi bi-cart-plus me-1"></i> Nouvelle Vente</button>
+                <a class="btn btn-primary btn-sm" href="{{ route('ventes.create') }}"><i class="bi bi-cart-plus me-1"></i> Nouvelle Vente</a>
             </div>
         </div>
     </x-slot>
@@ -65,6 +65,126 @@
         </div>
     </div>
 
+    {{-- Carte Unique de Synthèse Financière & Trésorerie --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold mb-0 text-dark">
+                <i class="bi bi-wallet2 text-primary me-2"></i>Synthèse Financière & Trésorerie
+            </h5>
+            <span class="badge bg-light text-dark border">
+                <i class="bi bi-clock-history me-1"></i>Mis à jour en temps réel
+            </span>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                {{-- 1. Soldes des Comptes & Caisse Principale --}}
+                <div class="col-12 col-md-6 col-xl-3 border-end-md">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-primary-subtle text-primary p-2 rounded me-2">
+                            <i class="bi bi-bank fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Soldes des Comptes</h6>
+                            <small class="text-muted">Caisse principale & comptes</small>
+                        </div>
+                    </div>
+                    <div class="pe-xl-2">
+                        @forelse($comptesFinanciers as $compte)
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom-dashed">
+                                <span class="small fw-semibold text-secondary">
+                                    <i class="bi bi-credit-card-2-front me-1"></i>{{ $compte->nom }}
+                                </span>
+                                <span class="fw-bold text-dark small">
+                                    {{ number_format($compte->solde_courant, 0, ',', ' ') }} FCFA
+                                </span>
+                            </div>
+                        @empty
+                            <span class="text-muted small">Aucun compte financier configuré.</span>
+                        @endforelse
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-1 fw-bold">
+                            <span class="small text-primary">TOTAL TRÉSORERIE</span>
+                            <span class="text-primary">
+                                {{ number_format($comptesFinanciers->sum('solde_courant'), 0, ',', ' ') }} FCFA
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 2. Ventes (Jour / Semaine / Mois) --}}
+                <div class="col-12 col-md-6 col-xl-3 border-end-xl">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-success-subtle text-success p-2 rounded me-2">
+                            <i class="bi bi-cart-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Ventes de la Période</h6>
+                            <small class="text-muted">Ventes réalisées</small>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                            <span class="small text-muted fw-semibold">Aujourd'hui :</span>
+                            <span class="fw-bold text-success">{{ number_format($ventesJour, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                            <span class="small text-muted fw-semibold">Cette semaine :</span>
+                            <span class="fw-bold text-success">{{ number_format($ventesSemaine, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                            <span class="small text-muted fw-semibold">Ce mois :</span>
+                            <span class="fw-bold text-success">{{ number_format($ventesMois, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 3. Dépenses (Jour / Mois) --}}
+                <div class="col-12 col-md-6 col-xl-3 border-end-md">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-danger-subtle text-danger p-2 rounded me-2">
+                            <i class="bi bi-arrow-down-right-circle fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Dépenses & Charges</h6>
+                            <small class="text-muted">Sorties de caisse</small>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                            <span class="small text-muted fw-semibold">Aujourd'hui :</span>
+                            <span class="fw-bold text-danger">{{ number_format($depensesJour, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
+                            <span class="small text-muted fw-semibold">Ce mois :</span>
+                            <span class="fw-bold text-danger">{{ number_format($depensesMois, 0, ',', ' ') }} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- 4. Crédits Octroyés --}}
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="badge bg-warning-subtle text-warning p-2 rounded me-2">
+                            <i class="bi bi-person-exclamation fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Crédits Octroyés</h6>
+                            <small class="text-muted">Encours créances clients</small>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 h-100 d-flex flex-column justify-content-center">
+                        <span class="small text-muted fw-semibold mb-1">Total Dettes Clients en cours :</span>
+                        <h4 class="fw-bold text-warning-emphasis mb-0">
+                            {{ number_format($totalCreditsOctroyes, 0, ',', ' ') }} FCFA
+                        </h4>
+                        <small class="text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i>Somme à recouvrir auprès des clients
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
         <!-- Dernières Ventes -->
         <div class="col-12 col-lg-8">
@@ -74,7 +194,7 @@
                     <a href="#" class="btn btn-link btn-sm text-decoration-none">Voir tout</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover table-paginated align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th>N° Vente</th>
@@ -127,8 +247,8 @@
                                     <small class="text-muted">{{ $produit->categorie->nom }}</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-danger rounded-pill">{{ $produit->stock?->quantite ?? 0 }} en stock</span>
-                                    <div class="small text-muted">Min: {{ $produit->stock_min }}</div>
+                                    <span class="badge bg-danger rounded-pill fw-bold">{{ $produit->stock_formate }}</span>
+                                    <div class="small text-muted">Min: {{ $produit->stock_min }} bts</div>
                                 </div>
                             </li>
                         @empty

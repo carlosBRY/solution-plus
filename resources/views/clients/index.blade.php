@@ -77,7 +77,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table table-paginated align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Client</th>

@@ -57,18 +57,28 @@ class VenteController extends Controller
     /**
      * Interface de Caisse / Point de Vente (POS).
      */
-    public function create(): View
+    public function create(Request $request): View
     {
-        $clients = Client::orderBy('nom')->get();
-        $produits = Produit::with(['conditionnements', 'stock', 'categorie'])
-            ->where('actif', true)
-            ->whereHas('stock', fn ($q) => $q->where('quantite', '>', 0))
-            ->orderBy('nom')
-            ->get();
+        $user = $request->user();
+        $isAdmin = $user->hasRole('Administrateur');
 
+        $clients = Client::orderBy('nom')->get();
+
+        $query = Produit::with(['conditionnements', 'stock', 'categorie'])
+            ->where('actif', true)
+            ->whereHas('stock', fn ($q) => $q->where('quantite', '>', 0));
+
+        if (! $isAdmin) {
+            // Pour les utilisateurs non-administrateurs, filtrer pour masquer les produits en stock minimum
+            $query->whereHas('stock', function ($q) {
+                $q->whereColumn('stocks.quantite', '>', 'produits.stock_min');
+            });
+        }
+
+        $produits = $query->orderBy('nom')->get();
         $modesPaiement = ModePaiement::cases();
 
-        return view('ventes.create', compact('clients', 'produits', 'modesPaiement'));
+        return view('ventes.create', compact('clients', 'produits', 'modesPaiement', 'isAdmin'));
     }
 
     /**
@@ -78,10 +88,14 @@ class VenteController extends Controller
     {
         $validated = $request->validate([
             'client_id' => ['nullable', 'required_if:mode_paiement,CREDIT', 'exists:clients,id'],
+            'client_comptant_nom' => ['nullable', 'string', 'max:255'],
+            'client_comptant_prenom' => ['nullable', 'string', 'max:255'],
+            'client_comptant_contact' => ['nullable', 'string', 'max:255'],
             'date' => ['nullable', 'date'],
             'mode_paiement' => ['required', 'string'],
             'montant_paye' => ['nullable', 'numeric', 'min:0'],
             'remise_globale' => ['nullable', 'numeric', 'min:0'],
+            'confirmer_vente_stock_min' => ['nullable', 'boolean'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.produit_id' => ['required', 'exists:produits,id'],
             'items.*.conditionnement_id' => ['required', 'exists:conditionnements,id'],

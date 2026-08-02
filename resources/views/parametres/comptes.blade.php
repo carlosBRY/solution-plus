@@ -35,6 +35,13 @@
                 </a>
             </li>
         @endcan
+        @can('gérer-roles')
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('parametres.roles.index') }}">
+                    <i class="bi bi-shield-lock me-1"></i> Rôles & Permissions
+                </a>
+            </li>
+        @endcan
     </ul>
 
     {{-- Flash Messages --}}
@@ -60,7 +67,7 @@
             <span class="badge bg-secondary rounded-pill">{{ $comptes->count() }} compte(s)</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover table-paginated align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Nom du Compte</th>
@@ -112,6 +119,7 @@
                                             title="Modifier">
                                         <i class="bi bi-pencil"></i>
                                     </button>
+                                    @can('modifier-solde-compte')
                                     <button type="button"
                                             class="btn btn-outline-primary"
                                             data-bs-toggle="modal"
@@ -122,6 +130,7 @@
                                             title="Ajuster/Initialiser le Solde">
                                         <i class="bi bi-cash-stack"></i>
                                     </button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

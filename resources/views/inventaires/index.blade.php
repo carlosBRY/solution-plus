@@ -99,7 +99,7 @@
             <span class="badge bg-secondary rounded-pill">{{ $inventaires->total() }} inventaire(s)</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover table-paginated align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Date & Heure</th>

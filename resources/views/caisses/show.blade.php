@@ -194,7 +194,7 @@
                                 <th>N° Vente</th>
                                 <th>Client</th>
                                 <th>Mode</th>
-                                <th>Montant Payé</th>
+                                <th class="text-end">Net Encaissé en Caisse</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -214,7 +214,14 @@
                                             {{ is_object($p->mode) ? $p->mode->value : $p->mode }}
                                         </span>
                                     </td>
-                                    <td class="fw-bold text-success">+ {{ number_format($p->montant, 0, ',', ' ') }} FCFA</td>
+                                    <td class="text-end">
+                                        <div class="fw-bold text-success">+ {{ number_format($p->montant, 0, ',', ' ') }} FCFA</div>
+                                        @if($p->vente && $p->vente->monnaie > 0)
+                                            <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                                (Remis: {{ number_format($p->vente->montant_paye, 0, ',', ' ') }} | Monnaie: {{ number_format($p->vente->monnaie, 0, ',', ' ') }})
+                                            </small>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>

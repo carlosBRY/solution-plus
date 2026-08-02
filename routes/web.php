@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApprovisionnementController;
 use App\Http\Controllers\CaisseController;
+use App\Http\Controllers\CasierController;
 use App\Http\Controllers\CategorieController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompteFinancierController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\InventaireController;
 use App\Http\Controllers\ParametreController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\VenteController;
@@ -61,6 +63,7 @@ Route::middleware('auth')->group(function () {
 
     // Fournisseurs
     Route::middleware('can:gérer-fournisseurs')->group(function () {
+        Route::post('fournisseurs/{fournisseur}/tarifs', [FournisseurController::class, 'updateTarifs'])->name('fournisseurs.tarifs.update');
         Route::resource('fournisseurs', FournisseurController::class)->except(['create', 'edit']);
     });
 
@@ -95,6 +98,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('inventaires', InventaireController::class)->except(['edit', 'update', 'destroy']);
     });
 
+    // Casiers & Bouteilles Consignées
+    Route::middleware('can:gérer-casiers')->prefix('casiers')->name('casiers.')->group(function () {
+        Route::get('/', [CasierController::class, 'index'])->name('index');
+        Route::post('/types', [CasierController::class, 'storeType'])->name('types.store');
+        Route::put('/types/{typeCasier}/stock', [CasierController::class, 'adjustStock'])->name('types.adjust-stock');
+        Route::post('/initialiser-stock', [CasierController::class, 'initialiserStockGlobal'])->name('initialiser-stock');
+        Route::post('/mouvements', [CasierController::class, 'storeMouvement'])->name('mouvements.store');
+        Route::post('/mouvements/{consignation}/solder', [CasierController::class, 'solderMouvement'])->name('mouvements.solder');
+        Route::delete('/mouvements/{consignation}', [CasierController::class, 'destroyMouvement'])->name('mouvements.destroy');
+    });
+
     // Module Paramètres (Général, Conditionnements, Utilisateurs)
     Route::middleware('can:gérer-parametres')->prefix('parametres')->name('parametres.')->group(function () {
         Route::get('/', [ParametreController::class, 'index'])->name('index');
@@ -116,6 +130,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserManagementController::class)->except(['show', 'destroy']);
         Route::patch('users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])->name('users.toggle-active');
         Route::put('users/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('users.reset-password');
+    });
+
+    // Paramètres > Gestion des Rôles & Permissions
+    Route::middleware('can:gérer-roles')->prefix('parametres')->name('parametres.')->group(function () {
+        Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
+        Route::post('/roles', [RolePermissionController::class, 'store'])->name('roles.store');
+        Route::put('/roles/{role}', [RolePermissionController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [RolePermissionController::class, 'destroy'])->name('roles.destroy');
     });
 });
 

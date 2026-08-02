@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ModePaiement;
 use App\Enums\StatutVente;
 use App\Models\Client;
 use App\Models\CompteFinancier;
@@ -104,9 +105,10 @@ class ClientCreditService
                 $resteAAttribuer -= $montantAffecte;
 
                 // Créer un paiement lié à la vente
+                $modePaiement = ModePaiement::tryFrom($reglement->mode ?? '') ?? ModePaiement::ESPECES;
                 Paiement::create([
                     'vente_id' => $vente->id,
-                    'mode' => $reglement->mode,
+                    'mode' => $modePaiement,
                     'montant' => $montantAffecte,
                     'reference' => "Règlement dette #{$reglement->numero}",
                     'compte_financier_id' => $compte?->id,

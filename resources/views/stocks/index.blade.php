@@ -128,7 +128,7 @@
             <span class="badge bg-secondary rounded-pill">{{ $produits->total() }} produit(s)</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover table-paginated align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Produit</th>
@@ -163,7 +163,7 @@
                                 </span>
                             </td>
                             <td class="text-center fw-bold {{ $isRupture ? 'text-danger' : ($isAlerte ? 'text-warning' : 'text-success') }}">
-                                {{ number_format($stockQte) }} {{ $produit->unite_base }}
+                                {{ $produit->stock_formate }}
                             </td>
                             <td class="text-center text-muted">{{ $stockMin }} {{ $produit->unite_base }}</td>
                             <td class="text-center">
@@ -175,7 +175,7 @@
                                     <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Normal</span>
                                 @endif
                             </td>
-                            @can('gérer-stocks')
+                            @can('ajuster-stock')
                             <td class="text-end">
                                 <button type="button"
                                         class="btn btn-outline-primary btn-sm"

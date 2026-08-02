@@ -92,14 +92,14 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table table-paginated align-middle mb-0">
                 <thead>
                     <tr>
                         <th>Photo</th>
                         <th>Produit & Unité</th>
                         <th>Conditionnements Configurés</th>
                         <th>Prix Réf.</th>
-                        <th>Stock (Unité de base)</th>
+                        <th>Stock Disponible (Caisses / Bouteilles)</th>
                         <th>Statut</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -147,9 +147,10 @@
                                 @if($quantite <= 0)
                                     <span class="badge bg-danger">Épuisé (0 {{ $produit->unite_base }})</span>
                                 @elseif($enAlerte)
-                                    <span class="badge bg-warning text-dark">{{ $quantite }} {{ $produit->unite_base }}(s) (Alerte min: {{ $produit->stock_min }})</span>
+                                    <span class="badge bg-warning text-dark fw-bold">⚠️ {{ $produit->stock_formate }}</span>
+                                    <div class="small text-muted">Alerte min: {{ $produit->stock_min }} bts</div>
                                 @else
-                                    <span class="badge bg-success-subtle text-success">{{ $quantite }} {{ $produit->unite_base }}(s)</span>
+                                    <span class="badge bg-success-subtle text-success fw-bold">{{ $produit->stock_formate }}</span>
                                 @endif
                             </td>
                             <td>
@@ -250,12 +251,12 @@
                                                             <input class="form-control" type="text" name="unite_base" value="{{ old('unite_base', $produit->unite_base) }}" required placeholder="ex: BOUTEILLE, CANETTE, CANNON">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <label class="form-label">Prix Achat Unité (FCFA) <span class="text-danger">*</span></label>
-                                                            <input class="form-control" type="number" step="0.01" name="prix_achat" value="{{ old('prix_achat', $produit->prix_achat) }}" required>
+                                                            <label class="form-label">Prix Achat Unité (FCFA)</label>
+                                                            <input class="form-control" type="number" step="0.01" name="prix_achat" value="{{ old('prix_achat', $produit->prix_achat) }}" placeholder="0">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <label class="form-label">Prix Vente Unité (FCFA) <span class="text-danger">*</span></label>
-                                                            <input class="form-control" type="number" step="0.01" name="prix_vente" value="{{ old('prix_vente', $produit->prix_vente) }}" required>
+                                                            <label class="form-label">Prix Vente Unité (FCFA)</label>
+                                                            <input class="form-control" type="number" step="0.01" name="prix_vente" value="{{ old('prix_vente', $produit->prix_vente) }}" placeholder="0">
                                                         </div>
                                                         <div class="col-md-6">
                                                             <label class="form-label">Seuil d'Alerte Min <span class="text-danger">*</span></label>
@@ -270,6 +271,14 @@
                                                                 </div>
                                                             @endif
                                                             <input class="form-control" type="file" name="photo" accept="image/*">
+                                                        </div>
+                                                        <div class="col-md-12">
+                                                            <div class="form-check form-switch mt-2">
+                                                                <input class="form-check-input" type="checkbox" role="switch" name="actif" value="1" id="edit_actif_{{ $produit->id }}" {{ old('actif', $produit->actif) ? 'checked' : '' }}>
+                                                                <label class="form-check-label fw-bold text-dark" for="edit_actif_{{ $produit->id }}">
+                                                                    Produit Actif (Disponible à la vente & dans le catalogue)
+                                                                </label>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -373,16 +382,16 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label" for="create_pa">Prix d'Achat Unité (FCFA) <span class="text-danger">*</span></label>
-                                <input class="form-control @error('prix_achat') is-invalid @enderror" id="create_pa" type="number" step="0.01" name="prix_achat" value="{{ old('prix_achat', 0) }}" required>
+                                <label class="form-label" for="create_pa">Prix d'Achat Unité (FCFA)</label>
+                                <input class="form-control @error('prix_achat') is-invalid @enderror" id="create_pa" type="number" step="0.01" name="prix_achat" value="{{ old('prix_achat') }}" placeholder="0">
                                 @error('prix_achat')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label" for="create_pv">Prix de Vente Unité (FCFA) <span class="text-danger">*</span></label>
-                                <input class="form-control @error('prix_vente') is-invalid @enderror" id="create_pv" type="number" step="0.01" name="prix_vente" value="{{ old('prix_vente', 0) }}" required>
+                                <label class="form-label" for="create_pv">Prix de Vente Unité (FCFA)</label>
+                                <input class="form-control @error('prix_vente') is-invalid @enderror" id="create_pv" type="number" step="0.01" name="prix_vente" value="{{ old('prix_vente') }}" placeholder="0">
                                 @error('prix_vente')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

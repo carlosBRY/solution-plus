@@ -15,6 +15,9 @@ class Vente extends Model
 
     protected $fillable = [
         'client_id',
+        'client_comptant_nom',
+        'client_comptant_prenom',
+        'client_comptant_contact',
         'user_id',
         'numero',
         'date',
@@ -73,5 +76,13 @@ class Vente extends Model
     public function retoursVentes(): HasMany
     {
         return $this->hasMany(RetourVente::class);
+    }
+
+    /**
+     * Montant net effectivement encaissé en caisse pour cette vente (Montant Reçu - Monnaie Rendue).
+     */
+    public function getMontantEncaisseAttribute(): float
+    {
+        return max(0, (float) $this->montant_paye - (float) $this->monnaie);
     }
 }

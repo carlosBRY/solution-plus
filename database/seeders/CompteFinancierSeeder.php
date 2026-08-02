@@ -19,9 +19,19 @@ class CompteFinancierSeeder extends Seeder
                 'description' => 'Caisse physique — billets et pièces',
             ],
             [
+                'nom' => 'Wave',
+                'mode' => 'WAVE',
+                'description' => 'Paiements et encaissements via Wave',
+            ],
+            [
                 'nom' => 'Orange Money',
                 'mode' => 'ORANGE_MONEY',
                 'description' => 'Paiements et encaissements via Orange Money',
+            ],
+            [
+                'nom' => 'MTN Mobile Money',
+                'mode' => 'MTN_MONEY',
+                'description' => 'Paiements et encaissements via MTN Mobile Money',
             ],
             [
                 'nom' => 'Moov Money',

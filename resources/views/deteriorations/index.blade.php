@@ -30,28 +30,22 @@
 
     {{-- Metric Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-4">
             <div class="card card-body border-0 shadow-sm h-100">
                 <span class="text-muted small fw-semibold">Total Déclarations</span>
                 <h3 class="fw-bold mb-0 mt-1">{{ $totalDeteriorations }}</h3>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-4">
             <div class="card card-body border-0 shadow-sm h-100">
                 <span class="text-muted small fw-semibold">En Brouillon</span>
                 <h3 class="fw-bold mb-0 mt-1 text-warning">{{ $brouillonsCount }}</h3>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3">
+        <div class="col-12 col-sm-4">
             <div class="card card-body border-0 shadow-sm h-100">
                 <span class="text-muted small fw-semibold">Validées & Imputées</span>
                 <h3 class="fw-bold mb-0 mt-1 text-success">{{ $valideesCount }}</h3>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card card-body border-0 shadow-sm h-100">
-                <span class="text-muted small fw-semibold">Valeur Totale des Pertes</span>
-                <h3 class="fw-bold mb-0 mt-1 text-danger">{{ number_format($totalValeurPerte, 0, ',', ' ') }} FCFA</h3>
             </div>
         </div>
     </div>
@@ -77,13 +71,12 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table table-paginated align-middle mb-0">
                 <thead>
                     <tr>
                         <th>N° Déclaration</th>
                         <th>Date</th>
                         <th>Déclaré par</th>
-                        <th>Valeur Perte</th>
                         <th>Statut</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -94,7 +87,6 @@
                             <td><a href="{{ route('deteriorations.show', $det) }}" class="fw-bold text-decoration-none">{{ $det->numero }}</a></td>
                             <td>{{ $det->date->format('d/m/Y H:i') }}</td>
                             <td>{{ $det->user->name }}</td>
-                            <td class="fw-bold text-danger">{{ number_format($det->total_perte, 0, ',', ' ') }} FCFA</td>
                             <td>
                                 @if($det->isEstValidee())
                                     <span class="badge bg-success">Validée</span>

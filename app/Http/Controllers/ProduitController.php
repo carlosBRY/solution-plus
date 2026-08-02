@@ -80,8 +80,8 @@ class ProduitController extends Controller
             'code_barre' => ['nullable', 'string', 'max:100'],
             'marque' => ['nullable', 'string', 'max:100'],
             'unite_base' => ['required', 'string', 'max:50'],
-            'prix_achat' => ['required', 'numeric', 'min:0'],
-            'prix_vente' => ['required', 'numeric', 'min:0'],
+            'prix_achat' => ['nullable', 'numeric', 'min:0'],
+            'prix_vente' => ['nullable', 'numeric', 'min:0'],
             'stock_min' => ['required', 'integer', 'min:0'],
             'quantite_initiale' => ['nullable', 'integer', 'min:0'],
             'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
@@ -96,6 +96,8 @@ class ProduitController extends Controller
             $validated['photo'] = $request->file('photo')->store('produits', 'public');
         }
 
+        $validated['prix_achat'] = (float) ($validated['prix_achat'] ?? 0);
+        $validated['prix_vente'] = (float) ($validated['prix_vente'] ?? 0);
         $quantiteInitiale = (int) ($validated['quantite_initiale'] ?? 0);
         unset($validated['quantite_initiale']);
 
@@ -158,8 +160,8 @@ class ProduitController extends Controller
             'code_barre' => ['nullable', 'string', 'max:100'],
             'marque' => ['nullable', 'string', 'max:100'],
             'unite_base' => ['required', 'string', 'max:50'],
-            'prix_achat' => ['required', 'numeric', 'min:0'],
-            'prix_vente' => ['required', 'numeric', 'min:0'],
+            'prix_achat' => ['nullable', 'numeric', 'min:0'],
+            'prix_vente' => ['nullable', 'numeric', 'min:0'],
             'stock_min' => ['required', 'integer', 'min:0'],
             'photo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -174,6 +176,8 @@ class ProduitController extends Controller
         }
 
         $validated['actif'] = $request->has('actif');
+        $validated['prix_achat'] = (float) ($validated['prix_achat'] ?? 0);
+        $validated['prix_vente'] = (float) ($validated['prix_vente'] ?? 0);
 
         $produit->update($validated);
 

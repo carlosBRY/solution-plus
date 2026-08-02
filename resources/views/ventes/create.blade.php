@@ -13,10 +13,23 @@
         </div>
     </x-slot>
 
-    {{-- Flash Messages --}}
+    {{-- Flash Messages & Errors --}}
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+            <strong>Impossible de valider la vente :</strong>
+            <ul class="mb-0 mt-1 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -43,15 +56,23 @@
                                     <select class="form-select form-select-sm produit-select" name="items[0][produit_id]" required>
                                         <option value="">Sélectionner une boisson</option>
                                         @foreach($produits as $prod)
-                                            <option value="{{ $prod->id }}">
-                                                {{ $prod->nom }} (Stock: {{ $prod->stock?->quantite ?? 0 }} {{ $prod->unite_base }})
+                                            @php
+                                                $qte = $prod->stock?->quantite ?? 0;
+                                                $isSousStockMin = $qte <= $prod->stock_min;
+                                                $labelStock = "Stock: {$prod->stock_formate}";
+                                                if ($isSousStockMin) {
+                                                    $labelStock .= ' - ⚠️ STOCK MINIMUM';
+                                                }
+                                            @endphp
+                                            <option value="{{ $prod->id }}" data-stock="{{ $qte }}" data-stock-min="{{ $prod->stock_min }}">
+                                                {{ $prod->nom }} ({{ $labelStock }})
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-3">
                                     <label class="form-label small fw-semibold">Conditionnement <span class="text-danger">*</span></label>
-                                    <select class="form-select form-select-sm cond-select" name="items[0][conditionnement_id]" required disabled>
+                                    <select class="form-select form-select-sm cond-select ts-ignore" name="items[0][conditionnement_id]" required disabled>
                                         <option value="">Choisir boisson</option>
                                     </select>
                                 </div>
@@ -95,9 +116,30 @@
                         <select class="form-select" id="client_id" name="client_id">
                             <option value="">Client Comptant (Passant)</option>
                             @foreach($clients as $c)
-                                <option value="{{ $c->id }}">{{ $c->nom }} {{ $c->prenom }} ({{ $c->telephone }})</option>
+                                <option value="{{ $c->id }}" {{ old('client_id') == $c->id ? 'selected' : '' }}>{{ $c->nom }} {{ $c->prenom }} ({{ $c->telephone }})</option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- Informations sur le reçu pour Client Comptant (Passant) --}}
+                    <div class="card border bg-light-subtle p-2 mb-3" id="boxClientComptant">
+                        <div class="fw-semibold small text-muted mb-2">
+                            <i class="bi bi-person-badge me-1"></i> Infos Client pour le Reçu (Optionnel)
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small mb-1 text-muted" for="client_comptant_nom">Nom</label>
+                                <input class="form-control form-control-sm" type="text" id="client_comptant_nom" name="client_comptant_nom" value="{{ old('client_comptant_nom') }}" placeholder="Ex: Kouassi">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small mb-1 text-muted" for="client_comptant_prenom">Prénom(s)</label>
+                                <input class="form-control form-control-sm" type="text" id="client_comptant_prenom" name="client_comptant_prenom" value="{{ old('client_comptant_prenom') }}" placeholder="Ex: Koffi">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small mb-1 text-muted" for="client_comptant_contact">Téléphone / Contact</label>
+                                <input class="form-control form-control-sm" type="text" id="client_comptant_contact" name="client_comptant_contact" value="{{ old('client_comptant_contact') }}" placeholder="Ex: 07 01 02 03 04">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -115,8 +157,8 @@
                             <input class="form-control" type="number" step="0.01" id="remise_globale" name="remise_globale" value="0" min="0">
                         </div>
                         <div class="col-6">
-                            <label class="form-label" for="montant_paye">Montant Reçu (FCFA) <span class="text-danger">*</span></label>
-                            <input class="form-control fw-bold fs-5 text-success" type="number" step="0.01" id="montant_paye" name="montant_paye" value="0" min="0" required>
+                            <label class="form-label" for="montant_paye">Montant Remis / Reçu (FCFA) <span class="text-danger">*</span></label>
+                            <input class="form-control fw-bold fs-5 text-success" type="number" step="0.01" id="montant_paye" name="montant_paye" value="0" min="0" required placeholder="Ex: 10000">
                         </div>
                     </div>
 
@@ -135,9 +177,17 @@
                             <span>TOTAL NET À PAYER :</span>
                             <span class="text-primary fs-5" id="lblTotalNet">0 FCFA</span>
                         </div>
-                        <div class="d-flex justify-content-between small" id="rowMonnaie">
+                        <div class="d-flex justify-content-between small mb-1" id="rowMontantRemis">
+                            <span class="text-muted">Montant Remis par Client :</span>
+                            <span class="fw-bold text-dark" id="lblMontantRemisVal">0 FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1" id="rowMonnaie">
                             <span class="text-muted" id="lblMonnaieTitre">Monnaie à Rendre :</span>
-                            <span class="fw-bold text-success fs-6" id="lblMonnaieVal">0 FCFA</span>
+                            <span class="fw-bold text-success" id="lblMonnaieVal">0 FCFA</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top fw-bold" id="rowNetCaisse">
+                            <span class="text-dark"><i class="bi bi-wallet2 me-1 text-success"></i>Entrée Net en Caisse :</span>
+                            <span class="fw-bold text-success fs-6" id="lblNetCaisseVal">0 FCFA</span>
                         </div>
                     </div>
 
@@ -148,6 +198,19 @@
                             <strong>Attention :</strong> Le montant reçu est inférieur au total net. Pour accorder un crédit, choisissez le mode <strong>Crédit</strong> et sélectionnez un client.
                         </div>
                     </div>
+
+                    {{-- Confirmation Administrateur pour Vente sous Stock Minimum --}}
+                    @if($isAdmin ?? false)
+                        <div class="card border-warning bg-warning bg-opacity-10 mb-3 p-3" id="boxConfirmationAdmin">
+                            <div class="form-check">
+                                <input class="form-check-input @error('confirmer_vente_stock_min') is-invalid @enderror" type="checkbox" name="confirmer_vente_stock_min" value="1" id="confirmer_vente_stock_min" {{ old('confirmer_vente_stock_min') ? 'checked' : '' }}>
+                                <label class="form-check-label fw-bold text-dark small" for="confirmer_vente_stock_min">
+                                    <i class="bi bi-shield-lock-fill text-warning me-1"></i> Autorisation Administrateur : Je confirme vouloir débloquer la vente de produit(s) sous le stock minimum.
+                                </label>
+                            </div>
+                            <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Obligatoire uniquement si le panier contient une boisson sous le seuil d'alerte.</small>
+                        </div>
+                    @endif
 
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-success btn-lg fw-bold" id="btnSubmitVente">
@@ -203,22 +266,28 @@
                 document.getElementById('lblTotalNet').textContent = strTotalNet;
                 document.getElementById('lblPanierTotal').textContent = strTotalNet;
 
+                const monnaie = Math.max(0, paye - totalNet);
+                const netCaisse = Math.min(paye, totalNet);
+
+                document.getElementById('lblMontantRemisVal').textContent = paye.toLocaleString('fr-FR') + ' FCFA';
+                document.getElementById('lblNetCaisseVal').textContent = (isCredit ? Math.min(paye, totalNet) : netCaisse).toLocaleString('fr-FR') + ' FCFA';
+
                 if (isCredit) {
                     const soldeRestant = Math.max(0, totalNet - paye);
                     document.getElementById('lblMonnaieTitre').textContent = 'Solde à ajouter en Dette :';
                     document.getElementById('lblMonnaieVal').textContent = soldeRestant.toLocaleString('fr-FR') + ' FCFA';
-                    document.getElementById('lblMonnaieVal').className = 'fw-bold text-danger fs-6';
+                    document.getElementById('lblMonnaieVal').className = 'fw-bold text-danger';
                     alertSousPaiement.classList.add('d-none');
                 } else {
-                    const monnaie = paye - totalNet;
                     document.getElementById('lblMonnaieTitre').textContent = 'Monnaie à Rendre :';
-                    if (monnaie >= 0) {
+                    if (paye >= totalNet) {
                         document.getElementById('lblMonnaieVal').textContent = monnaie.toLocaleString('fr-FR') + ' FCFA';
-                        document.getElementById('lblMonnaieVal').className = 'fw-bold text-success fs-6';
+                        document.getElementById('lblMonnaieVal').className = 'fw-bold text-success';
                         alertSousPaiement.classList.add('d-none');
                     } else {
-                        document.getElementById('lblMonnaieVal').textContent = 'Manque ' + Math.abs(monnaie).toLocaleString('fr-FR') + ' FCFA';
-                        document.getElementById('lblMonnaieVal').className = 'fw-bold text-danger fs-6';
+                        const manque = totalNet - paye;
+                        document.getElementById('lblMonnaieVal').textContent = 'Manque ' + manque.toLocaleString('fr-FR') + ' FCFA';
+                        document.getElementById('lblMonnaieVal').className = 'fw-bold text-danger';
                         if (sousTotal > 0) {
                             alertSousPaiement.classList.remove('d-none');
                         }
@@ -242,12 +311,35 @@
                 updateCalculs();
             }
 
+            function toggleClientComptantBox() {
+                const boxClientComptant = document.getElementById('boxClientComptant');
+                if (boxClientComptant) {
+                    if (clientSelect.value === '') {
+                        boxClientComptant.classList.remove('d-none');
+                    } else {
+                        boxClientComptant.classList.add('d-none');
+                    }
+                }
+            }
+
             modeSelect.addEventListener('change', handleModePaiementChange);
+            clientSelect.addEventListener('change', toggleClientComptantBox);
             remiseInput.addEventListener('input', updateCalculs);
             payeInput.addEventListener('input', function() {
                 payeInput.dataset.autoSet = 'false';
                 updateCalculs();
             });
+
+            toggleClientComptantBox();
+
+            function getProductOptionLabel(p) {
+                const qte = p.stock ? p.stock.quantite : 0;
+                let label = `Stock: ${qte} ${p.unite_base}`;
+                if (qte <= p.stock_min) {
+                    label += ' - ⚠️ STOCK MINIMUM';
+                }
+                return `${p.nom} (${label})`;
+            }
 
             function bindProduitSelect(row) {
                 const produitSelect = row.querySelector('.produit-select');
@@ -257,6 +349,11 @@
 
                 produitSelect.addEventListener('change', function() {
                     const produitId = this.value;
+
+                    if (condSelect.tomselect) {
+                        condSelect.tomselect.destroy();
+                    }
+
                     condSelect.innerHTML = '<option value="">Choisir conditionnement</option>';
 
                     if (!produitId) {
@@ -266,17 +363,28 @@
                         return;
                     }
 
-                    const produit = produitsData.find(p => p.id === produitId);
-                    if (produit && produit.conditionnements) {
-                        produit.conditionnements.forEach(c => {
+                    const produit = produitsData.find(p => String(p.id) === String(produitId));
+                    if (produit) {
+                        const conds = (produit.conditionnements && produit.conditionnements.length > 0)
+                            ? produit.conditionnements
+                            : [{
+                                id: '',
+                                nom: produit.unite_base || 'Unité',
+                                quantite_unite_base: 1,
+                                prix_vente: produit.prix_vente || 0
+                            }];
+
+                        conds.forEach(c => {
                             const opt = document.createElement('option');
                             opt.value = c.id;
-                            opt.dataset.prix = c.prix_vente || (produit.prix_vente * c.quantite_unite_base);
-                            opt.textContent = `${c.nom} (${c.quantite_unite_base} ${produit.unite_base})`;
+                            const prixVente = parseFloat(c.prix_vente) || (parseFloat(produit.prix_vente) * parseFloat(c.quantite_unite_base)) || 0;
+                            opt.dataset.prix = prixVente;
+                            opt.textContent = `${c.nom} (${c.quantite_unite_base} ${produit.unite_base || ''}) - ${prixVente.toLocaleString('fr-FR')} FCFA`;
                             condSelect.appendChild(opt);
                         });
+
                         condSelect.disabled = false;
-                        if (produit.conditionnements.length > 0) {
+                        if (condSelect.options.length > 1) {
                             condSelect.selectedIndex = 1;
                             const selectedOption = condSelect.options[1];
                             prixInput.value = selectedOption.dataset.prix || 0;
@@ -289,12 +397,18 @@
                     const selectedOption = this.options[this.selectedIndex];
                     if (selectedOption && selectedOption.dataset.prix) {
                         prixInput.value = selectedOption.dataset.prix;
+                    } else {
+                        prixInput.value = 0;
                     }
                     updateCalculs();
                 });
 
                 if (qteInput) {
                     qteInput.addEventListener('input', updateCalculs);
+                }
+
+                if (produitSelect.value) {
+                    produitSelect.dispatchEvent(new Event('change'));
                 }
             }
 
@@ -314,12 +428,12 @@
                             <label class="form-label small fw-semibold">Boisson <span class="text-danger">*</span></label>
                             <select class="form-select form-select-sm produit-select" name="items[${itemIndex}][produit_id]" required>
                                 <option value="">Sélectionner une boisson</option>
-                                ${produitsData.map(p => `<option value="${p.id}">${p.nom} (Stock: ${p.stock ? p.stock.quantite : 0} ${p.unite_base})</option>`).join('')}
+                                ${produitsData.map(p => `<option value="${p.id}">${getProductOptionLabel(p)}</option>`).join('')}
                             </select>
                         </div>
                         <div class="col-12 col-md-3">
                             <label class="form-label small fw-semibold">Conditionnement <span class="text-danger">*</span></label>
-                            <select class="form-select form-select-sm cond-select" name="items[${itemIndex}][conditionnement_id]" required disabled>
+                            <select class="form-select form-select-sm cond-select ts-ignore" name="items[${itemIndex}][conditionnement_id]" required disabled>
                                 <option value="">Choisir boisson</option>
                             </select>
                         </div>
