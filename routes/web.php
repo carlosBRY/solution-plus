@@ -46,41 +46,72 @@ Route::middleware('auth')->group(function () {
 
     // Approvisionnements
     Route::middleware('can:gérer-approvisionnements')->group(function () {
+        Route::get('approvisionnements/create', [ApprovisionnementController::class, 'create'])->name('approvisionnements.create');
+        Route::post('approvisionnements', [ApprovisionnementController::class, 'store'])->name('approvisionnements.store');
         Route::post('approvisionnements/{approvisionnement}/receptionner', [ApprovisionnementController::class, 'receptionner'])->name('approvisionnements.receptionner');
-        Route::resource('approvisionnements', ApprovisionnementController::class)->except(['edit', 'update', 'destroy']);
+    });
+    Route::middleware('permission:gérer-approvisionnements|consulter-comptabilite')->group(function () {
+        Route::get('approvisionnements', [ApprovisionnementController::class, 'index'])->name('approvisionnements.index');
+        Route::get('approvisionnements/{approvisionnement}', [ApprovisionnementController::class, 'show'])->name('approvisionnements.show');
     });
 
     // Ventes (Caisse & Point de vente)
     Route::middleware('can:gérer-ventes')->group(function () {
-        Route::resource('ventes', VenteController::class)->except(['edit', 'update', 'destroy']);
+        Route::get('ventes/create', [VenteController::class, 'create'])->name('ventes.create');
+        Route::post('ventes', [VenteController::class, 'store'])->name('ventes.store');
+    });
+    Route::middleware('permission:gérer-ventes|consulter-comptabilite')->group(function () {
+        Route::get('ventes', [VenteController::class, 'index'])->name('ventes.index');
+        Route::get('ventes/{vente}', [VenteController::class, 'show'])->name('ventes.show');
     });
 
     // Clients & Crédits
     Route::middleware('can:gérer-clients')->group(function () {
+        Route::post('clients', [ClientController::class, 'store'])->name('clients.store');
+        Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+        Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
         Route::post('clients/{client}/regler-dette', [ClientController::class, 'reglerDette'])->name('clients.regler-dette');
-        Route::resource('clients', ClientController::class)->except(['create', 'edit']);
+    });
+    Route::middleware('permission:gérer-clients|consulter-comptabilite')->group(function () {
+        Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
+        Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
     });
 
     // Fournisseurs
     Route::middleware('can:gérer-fournisseurs')->group(function () {
+        Route::post('fournisseurs', [FournisseurController::class, 'store'])->name('fournisseurs.store');
+        Route::put('fournisseurs/{fournisseur}', [FournisseurController::class, 'update'])->name('fournisseurs.update');
+        Route::delete('fournisseurs/{fournisseur}', [FournisseurController::class, 'destroy'])->name('fournisseurs.destroy');
         Route::post('fournisseurs/{fournisseur}/tarifs', [FournisseurController::class, 'updateTarifs'])->name('fournisseurs.tarifs.update');
-        Route::resource('fournisseurs', FournisseurController::class)->except(['create', 'edit']);
+    });
+    Route::middleware('permission:gérer-fournisseurs|consulter-comptabilite')->group(function () {
+        Route::get('fournisseurs', [FournisseurController::class, 'index'])->name('fournisseurs.index');
+        Route::get('fournisseurs/{fournisseur}', [FournisseurController::class, 'show'])->name('fournisseurs.show');
     });
 
     // Caisses & Comptes Financiers
     Route::middleware('can:gérer-caisses')->group(function () {
-        Route::get('comptes', [CompteFinancierController::class, 'index'])->name('comptes.index');
         Route::post('comptes/transferer', [CompteFinancierController::class, 'transferer'])->name('comptes.transferer');
-        Route::get('comptes/{compte}', [CompteFinancierController::class, 'show'])->name('comptes.show');
-
+        Route::post('comptes/deposer', [CompteFinancierController::class, 'deposer'])->name('comptes.deposer');
+        Route::post('comptes/retirer', [CompteFinancierController::class, 'retirer'])->name('comptes.retirer');
         Route::post('caisses/ouvrir', [CaisseController::class, 'ouvrir'])->name('caisses.ouvrir');
         Route::post('caisses/{caisse}/fermer', [CaisseController::class, 'fermer'])->name('caisses.fermer');
-        Route::resource('caisses', CaisseController::class)->only(['index', 'show']);
+    });
+    Route::middleware('permission:gérer-caisses|consulter-comptabilite')->group(function () {
+        Route::get('comptes', [CompteFinancierController::class, 'index'])->name('comptes.index');
+        Route::get('comptes/{compte}', [CompteFinancierController::class, 'show'])->name('comptes.show');
+        Route::get('caisses', [CaisseController::class, 'index'])->name('caisses.index');
+        Route::get('caisses/{caisse}', [CaisseController::class, 'show'])->name('caisses.show');
     });
 
     // Dépenses
     Route::middleware('can:gérer-depenses')->group(function () {
-        Route::resource('depenses', DepenseController::class)->except(['create', 'edit', 'show']);
+        Route::post('depenses', [DepenseController::class, 'store'])->name('depenses.store');
+        Route::put('depenses/{depense}', [DepenseController::class, 'update'])->name('depenses.update');
+        Route::delete('depenses/{depense}', [DepenseController::class, 'destroy'])->name('depenses.destroy');
+    });
+    Route::middleware('permission:gérer-depenses|consulter-comptabilite')->group(function () {
+        Route::get('depenses', [DepenseController::class, 'index'])->name('depenses.index');
     });
 
     // Stock & Mouvements de stock
@@ -89,8 +120,16 @@ Route::middleware('auth')->group(function () {
         Route::post('stocks/{produit}/ajuster', [StockController::class, 'ajuster'])->name('stocks.ajuster');
         Route::get('stocks/mouvements', [StockController::class, 'mouvements'])->name('stocks.mouvements');
 
+        // Détériorations — actions d'écriture (créer, supprimer, valider)
         Route::post('deteriorations/{deterioration}/valider', [DeteriorationController::class, 'valider'])->name('deteriorations.valider');
-        Route::resource('deteriorations', DeteriorationController::class)->except(['edit', 'update']);
+        Route::post('deteriorations', [DeteriorationController::class, 'store'])->name('deteriorations.store');
+        Route::get('deteriorations/create', [DeteriorationController::class, 'create'])->name('deteriorations.create');
+        Route::delete('deteriorations/{deterioration}', [DeteriorationController::class, 'destroy'])->name('deteriorations.destroy');
+    });
+    // Détériorations — consultation (index & show)
+    Route::middleware('permission:gérer-stocks|consulter-comptabilite')->group(function () {
+        Route::get('deteriorations', [DeteriorationController::class, 'index'])->name('deteriorations.index');
+        Route::get('deteriorations/{deterioration}', [DeteriorationController::class, 'show'])->name('deteriorations.show');
     });
 
     // Inventaires

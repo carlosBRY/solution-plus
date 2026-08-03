@@ -17,12 +17,12 @@
       <span class="nav-text">Tableau de bord</span>
     </a>
 
-    @can('gérer-ventes')
+    @canany(['gérer-ventes', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('ventes.*') ? 'active' : '' }}" href="{{ route('ventes.index') }}">
       <span class="nav-icon"><i class="bi bi-cart-check" aria-hidden="true"></i></span>
       <span class="nav-text">Ventes & Caisse</span>
     </a>
-    @endcan
+    @endcanany
 
     @can('gérer-produits')
     <a class="nav-link {{ request()->routeIs('produits.*') ? 'active' : '' }}" href="{{ route('produits.index') }}">
@@ -47,11 +47,14 @@
       <span class="nav-icon"><i class="bi bi-arrow-left-right" aria-hidden="true"></i></span>
       <span class="nav-text">Mouvements de Stock</span>
     </a>
+    @endcan
+
+    @canany(['gérer-stocks', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('deteriorations.*') ? 'active' : '' }}" href="{{ route('deteriorations.index') }}">
       <span class="nav-icon"><i class="bi bi-slash-circle" aria-hidden="true"></i></span>
       <span class="nav-text">Détériorations & Casses</span>
     </a>
-    @endcan
+    @endcanany
 
     @can('gérer-casiers')
     <a class="nav-link {{ request()->routeIs('casiers.*') ? 'active' : '' }}" href="{{ route('casiers.index') }}">
@@ -60,14 +63,14 @@
     </a>
     @endcan
 
-    @can('gérer-approvisionnements')
+    @canany(['gérer-approvisionnements', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('approvisionnements.*') ? 'active' : '' }}" href="{{ route('approvisionnements.index') }}">
       <span class="nav-icon"><i class="bi bi-truck" aria-hidden="true"></i></span>
       <span class="nav-text">Approvisionnements</span>
     </a>
-    @endcan
+    @endcanany
 
-    @can('gérer-caisses')
+    @canany(['gérer-caisses', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('comptes.*') ? 'active' : '' }}" href="{{ route('comptes.index') }}">
       <span class="nav-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
       <span class="nav-text">Caisse Principale</span>
@@ -76,28 +79,28 @@
       <span class="nav-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></span>
       <span class="nav-text">Sessions Caisses</span>
     </a>
-    @endcan
+    @endcanany
 
-    @can('gérer-clients')
+    @canany(['gérer-clients', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}">
       <span class="nav-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
       <span class="nav-text">Clients & Crédits</span>
     </a>
-    @endcan
+    @endcanany
 
-    @can('gérer-fournisseurs')
+    @canany(['gérer-fournisseurs', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('fournisseurs.*') ? 'active' : '' }}" href="{{ route('fournisseurs.index') }}">
       <span class="nav-icon"><i class="bi bi-building" aria-hidden="true"></i></span>
       <span class="nav-text">Fournisseurs</span>
     </a>
-    @endcan
+    @endcanany
 
-    @can('gérer-depenses')
+    @canany(['gérer-depenses', 'consulter-comptabilite'])
     <a class="nav-link {{ request()->routeIs('depenses.*') ? 'active' : '' }}" href="{{ route('depenses.index') }}">
       <span class="nav-icon"><i class="bi bi-receipt" aria-hidden="true"></i></span>
       <span class="nav-text">Dépenses</span>
     </a>
-    @endcan
+    @endcanany
 
     @can('gérer-inventaires')
     <a class="nav-link {{ request()->routeIs('inventaires.*') ? 'active' : '' }}" href="{{ route('inventaires.index') }}">

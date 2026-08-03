@@ -5,7 +5,15 @@
                 <p class="eyebrow mb-1 text-muted">Finances & Trésorerie</p>
                 <h1 class="h3 mb-0">Gestion de la Caisse</h1>
             </div>
-            <div>
+            <div class="d-flex gap-2">
+                @can('gérer-caisses')
+                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalDeposerCaisseIndex">
+                        <i class="bi bi-plus-circle me-1"></i> Ajouter de l'argent
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRetirerCaisseIndex">
+                        <i class="bi bi-dash-circle me-1"></i> Retirer de l'argent
+                    </button>
+                @endcan
                 @if(!$caisseOuverte)
                     <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalOuvrirCaisse">
                         <i class="bi bi-unlock me-1"></i> Ouvrir la Caisse
@@ -301,7 +309,7 @@
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-lg me-1"></i> Valider l'Ouverture</button>
+                        <button type="submit" class="btn btn-success fw-bold" data-confirm="Confirmer l'ouverture de la caisse avec ce fond de roulement ?"><i class="bi bi-check-lg me-1"></i> Valider l'Ouverture</button>
                     </div>
                 </form>
             </div>
@@ -370,13 +378,99 @@
                         </div>
                         <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" class="btn btn-warning fw-bold text-dark"><i class="bi bi-lock-fill me-1"></i> Confirmer la Clôture</button>
+                            <button type="submit" class="btn btn-warning fw-bold text-dark" data-confirm="Confirmer la clôture définitive de la session de caisse ?"><i class="bi bi-lock-fill me-1"></i> Confirmer la Clôture</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     @endif
+
+    {{-- Modal Ajouter de l'argent (Dépôt) --}}
+    <div class="modal fade" id="modalDeposerCaisseIndex" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="POST" action="{{ route('comptes.deposer') }}">
+                    @csrf
+                    <div class="modal-header bg-success text-white border-0">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-plus-circle me-2"></i>Ajouter de l'argent (Dépôt en Caisse)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="caisse_deposer_compte_id" class="form-label fw-medium">Caisse / Compte Destination <span class="text-danger">*</span></label>
+                            <select id="caisse_deposer_compte_id" name="compte_id" class="form-select" required>
+                                <option value="">Choisir la caisse...</option>
+                                @foreach($comptesActifs as $c)
+                                    <option value="{{ $c->id }}">
+                                        {{ $c->nom }} (Solde actuel: {{ number_format($c->solde_courant, 0, ',', ' ') }} FCFA)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="caisse_deposer_montant" class="form-label fw-medium">Montant à ajouter (FCFA) <span class="text-danger">*</span></label>
+                            <input type="number" id="caisse_deposer_montant" name="montant" class="form-control form-control-lg" min="1" required placeholder="Ex: 50000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="caisse_deposer_motif" class="form-label fw-medium">Motif de l'apport d'argent <span class="text-danger">*</span></label>
+                            <input type="text" id="caisse_deposer_motif" name="motif" class="form-control" required placeholder="Ex: Apport personnel, Fond de caisse initial...">
+                            <small class="text-muted">Le motif est obligatoire pour la traçabilité comptable.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success" data-confirm="Confirmer l'ajout de fonds dans la caisse ?"><i class="bi bi-check-lg me-1"></i> Valider l'Ajout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Retirer de l'argent (Retrait) --}}
+    <div class="modal fade" id="modalRetirerCaisseIndex" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="POST" action="{{ route('comptes.retirer') }}">
+                    @csrf
+                    <div class="modal-header bg-danger text-white border-0">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-dash-circle me-2"></i>Retirer de l'argent (Retrait de Caisse)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="caisse_retirer_compte_id" class="form-label fw-medium">Caisse / Compte Source <span class="text-danger">*</span></label>
+                            <select id="caisse_retirer_compte_id" name="compte_id" class="form-select" required>
+                                <option value="">Choisir la caisse...</option>
+                                @foreach($comptesActifs as $c)
+                                    <option value="{{ $c->id }}">
+                                        {{ $c->nom }} (Solde actuel: {{ number_format($c->solde_courant, 0, ',', ' ') }} FCFA)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="caisse_retirer_montant" class="form-label fw-medium">Montant à retirer (FCFA) <span class="text-danger">*</span></label>
+                            <input type="number" id="caisse_retirer_montant" name="montant" class="form-control form-control-lg" min="1" required placeholder="Ex: 25000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="caisse_retirer_motif" class="form-label fw-medium">Motif du retrait <span class="text-danger">*</span></label>
+                            <input type="text" id="caisse_retirer_motif" name="motif" class="form-control" required placeholder="Ex: Prélèvement gérant, Versement banque...">
+                            <small class="text-muted">Le motif est obligatoire pour la traçabilité comptable.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger" data-confirm="Confirmer le retrait de fonds de la caisse ?"><i class="bi bi-check-lg me-1"></i> Valider le Retrait</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

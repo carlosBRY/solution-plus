@@ -80,7 +80,7 @@
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i> Enregistrer le Brouillon</button>
+                        <button type="submit" class="btn btn-primary" data-confirm="Confirmer l'enregistrement de la détérioration en brouillon ?"><i class="bi bi-check-circle me-1"></i> Enregistrer le Brouillon</button>
                         <a href="{{ route('deteriorations.index') }}" class="btn btn-outline-secondary">Annuler</a>
                     </div>
                 </div>

@@ -218,7 +218,7 @@
                         </div>
                         <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                            <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-circle me-1"></i> Encaisser le Remboursement</button>
+                            <button type="submit" class="btn btn-success fw-bold" data-confirm="Confirmer le règlement de dette de ce client ?"><i class="bi bi-check-circle me-1"></i> Encaisser le Remboursement</button>
                         </div>
                     </form>
                 </div>

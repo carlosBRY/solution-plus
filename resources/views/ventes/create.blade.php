@@ -110,6 +110,13 @@
                     <h2 class="h5 mb-3 section-title"><i class="bi bi-cash-coin me-2"></i>Encaissement & Règlement</h2>
 
                     <div class="mb-3">
+                        <label class="form-label" for="date_vente">
+                            <i class="bi bi-calendar-event me-1"></i>Date de la Vente <span class="text-danger">*</span>
+                        </label>
+                        <input class="form-control" type="datetime-local" id="date_vente" name="date" value="{{ old('date', now()->format('Y-m-d\TH:i')) }}" required>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label" for="client_id">
                             Client <span id="clientRequiredBadge" class="text-danger fw-bold d-none">* Obligatoire pour Crédit</span>
                         </label>
@@ -213,7 +220,7 @@
                     @endif
 
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-success btn-lg fw-bold" id="btnSubmitVente">
+                        <button type="submit" class="btn btn-success btn-lg fw-bold" id="btnSubmitVente" data-confirm="Confirmer l'enregistrement de cette vente ? Le stock sera décrémenté et le paiement enregistré.">
                             <i class="bi bi-check2-circle me-1"></i> Valider & Imprimer Reçu
                         </button>
                         <a href="{{ route('ventes.index') }}" class="btn btn-outline-secondary">Annuler</a>

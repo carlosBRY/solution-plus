@@ -30,11 +30,11 @@
             <div class="card border-0 shadow-sm invoice-paper p-4 p-md-5 bg-white">
                 
                 {{-- En-tête de la Facture --}}
-                <div class="row pb-4 mb-4 border-bottom align-items-start">
-                    <div class="col-12 col-md-7 mb-3 mb-md-0">
+                <div class="row pb-3 mb-3 border-bottom align-items-start print-row">
+                    <div class="col-12 col-md-7 print-col-7 mb-3 mb-md-0">
                         <div class="d-flex align-items-center gap-3 mb-2">
                             @if($parametre->logo)
-                                <img src="{{ asset('storage/' . $parametre->logo) }}" alt="{{ $parametre->nom_cave }}" style="max-height: 50px;" class="mb-1">
+                                <img src="{{ asset('storage/' . $parametre->logo) }}" alt="{{ $parametre->nom_cave }}" style="max-height: 48px;" class="mb-1">
                             @else
                                 <div class="badge bg-primary p-2 rounded fs-4 text-white">
                                     <i class="bi bi-shop"></i>
@@ -58,7 +58,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-5 text-md-end">
+                    <div class="col-12 col-md-5 print-col-5 text-start text-md-end">
                         <div class="bg-light p-3 rounded border text-start text-md-end">
                             <h4 class="fw-extrabold text-dark mb-1">FACTURE / REÇU</h4>
                             <div class="fw-bold fs-5 text-primary mb-2">N° {{ $vente->numero }}</div>
@@ -73,8 +73,8 @@
                 </div>
 
                 {{-- Informations Client & Statut --}}
-                <div class="row mb-4">
-                    <div class="col-12 col-md-7 mb-3 mb-md-0">
+                <div class="row mb-3 print-row">
+                    <div class="col-12 col-md-7 print-col-7 mb-3 mb-md-0">
                         <div class="p-3 bg-light-subtle rounded border h-100">
                             <h6 class="text-uppercase small fw-bold text-muted mb-2">
                                 <i class="bi bi-person me-1"></i>Facturé à (Client)
@@ -101,7 +101,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-12 col-md-5">
+                    <div class="col-12 col-md-5 print-col-5">
                         <div class="p-3 bg-light-subtle rounded border h-100 d-flex flex-column justify-content-between">
                             <div>
                                 <h6 class="text-uppercase small fw-bold text-muted mb-2">
@@ -138,7 +138,7 @@
                 </div>
 
                 {{-- Tableau des Articles --}}
-                <div class="table-responsive mb-4">
+                <div class="table-responsive mb-3">
                     <table class="table table-bordered align-middle text-sm mb-0">
                         <thead class="table-light">
                             <tr>
@@ -183,22 +183,24 @@
                 </div>
 
                 {{-- Décomposition Financière & Encaissement Caisse --}}
-                <div class="row mb-4">
-                    <div class="col-12 col-md-6 mb-3 mb-md-0">
-                        <div class="p-3 border rounded bg-light-subtle h-100">
-                            <h6 class="fw-bold small text-muted text-uppercase mb-2">
-                                <i class="bi bi-journal-text me-1"></i>Notes & Conditions
-                            </h6>
-                            <p class="small text-muted mb-2">
-                                {{ $parametre->message_ticket ?? 'Merci de votre confiance et de votre fidélité !' }}
-                            </p>
+                <div class="row mb-3 print-row">
+                    <div class="col-12 col-md-6 print-col-6 mb-3 mb-md-0">
+                        <div class="p-3 border rounded bg-light-subtle h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="fw-bold small text-muted text-uppercase mb-2">
+                                    <i class="bi bi-journal-text me-1"></i>Notes & Conditions
+                                </h6>
+                                <p class="small text-muted mb-2">
+                                    {{ $parametre->message_ticket ?? 'Merci de votre confiance et de votre fidélité !' }}
+                                </p>
+                            </div>
                             <div class="small text-secondary fst-italic border-top pt-2 mt-2">
                                 <i class="bi bi-shield-exclamation me-1"></i>Les marchandises vendues ne sont ni reprises ni échangées.
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-6 print-col-6">
                         <div class="table-responsive">
                             <table class="table table-sm table-borderless mb-0">
                                 <tbody>
@@ -247,18 +249,18 @@
                 </div>
 
                 {{-- Signatures & Cachet --}}
-                <div class="row pt-4 mt-4 border-top text-center d-none d-print-flex invoice-signatures">
-                    <div class="col-6">
-                        <div class="small fw-bold text-muted mb-5">Signature & Cachet du Client</div>
+                <div class="row pt-3 mt-3 border-top text-center d-none d-print-flex print-row invoice-signatures">
+                    <div class="col-6 print-col-6">
+                        <div class="small fw-bold text-muted mb-4">Signature & Cachet du Client</div>
                         <div class="border-bottom mx-auto" style="width: 180px;"></div>
                     </div>
-                    <div class="col-6">
-                        <div class="small fw-bold text-muted mb-5">Signature & Cachet de la Cave</div>
+                    <div class="col-6 print-col-6">
+                        <div class="small fw-bold text-muted mb-4">Signature & Cachet de la Cave</div>
                         <div class="border-bottom mx-auto" style="width: 180px;"></div>
                     </div>
                 </div>
 
-                <div class="text-center pt-3 text-muted small border-top mt-4">
+                <div class="text-center pt-2 text-muted small border-top mt-3 invoice-footer-note">
                     <i class="bi bi-check-circle me-1"></i>Document officiel généré par <strong>{{ $parametre->nom_cave }}</strong> — Solution Plus
                 </div>
 
@@ -269,6 +271,11 @@
     {{-- Styles d'impression propres (@media print) --}}
     <style>
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm 10mm;
+            }
+
             /* Masquer l'ensemble des éléments de l'application web */
             .admin-sidebar,
             .sidebar-backdrop,
@@ -280,7 +287,8 @@
             nav,
             header,
             footer,
-            button {
+            button,
+            .alert {
                 display: none !important;
             }
 
@@ -291,6 +299,7 @@
                 padding: 0 !important;
                 box-shadow: none !important;
                 width: 100% !important;
+                height: auto !important;
             }
 
             .invoice-paper {
@@ -300,10 +309,75 @@
                 margin: 0 !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                font-size: 11.5px !important;
+                line-height: 1.3 !important;
+            }
+
+            /* Conserver la mise en page en colonnes à l'impression */
+            .print-row {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                width: 100% !important;
+            }
+
+            .print-col-7 {
+                width: 58.333333% !important;
+                flex: 0 0 58.333333% !important;
+                max-width: 58.333333% !important;
+            }
+
+            .print-col-5 {
+                width: 41.666667% !important;
+                flex: 0 0 41.666667% !important;
+                max-width: 41.666667% !important;
+            }
+
+            .print-col-6 {
+                width: 50% !important;
+                flex: 0 0 50% !important;
+                max-width: 50% !important;
+            }
+
+            /* Réduction harmonieuse des tailles et espaces pour l'impression */
+            .invoice-paper h3 { font-size: 1.25rem !important; }
+            .invoice-paper h4 { font-size: 1.1rem !important; }
+            .invoice-paper h6 { font-size: 0.85rem !important; }
+            .invoice-paper .fs-5 { font-size: 1.05rem !important; }
+            .invoice-paper .fs-6 { font-size: 0.9rem !important; }
+            
+            .invoice-paper .p-3 { padding: 0.5rem 0.75rem !important; }
+            .invoice-paper .p-4, .invoice-paper .p-md-5 { padding: 0 !important; }
+            .invoice-paper .mb-4 { margin-bottom: 0.75rem !important; }
+            .invoice-paper .mb-3 { margin-bottom: 0.5rem !important; }
+            .invoice-paper .pb-4 { padding-bottom: 0.5rem !important; }
+
+            .invoice-paper table th, 
+            .invoice-paper table td {
+                padding: 4px 8px !important;
+                font-size: 11px !important;
             }
 
             .invoice-signatures {
                 display: flex !important;
+                margin-top: 1rem !important;
+                padding-top: 0.5rem !important;
+            }
+
+            .invoice-signatures .mb-4 {
+                margin-bottom: 2.25rem !important;
+            }
+
+            .invoice-footer-note {
+                margin-top: 0.75rem !important;
+                padding-top: 0.5rem !important;
+                font-size: 10px !important;
+            }
+
+            /* Éviter la coupure de page sur la facture */
+            .invoice-paper, .print-row, table, .border {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
 
             /* Forcer le rendu exact des couleurs et bordures à l'impression */

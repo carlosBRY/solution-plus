@@ -40,6 +40,7 @@ class RoleSeeder extends Seeder
             'gérer-roles',
             'valider-détérioration',
             'annuler-vente',
+            'consulter-comptabilite',
         ];
 
         foreach ($permissions as $permission) {
@@ -66,6 +67,7 @@ class RoleSeeder extends Seeder
             'gérer-casiers',
             'ajuster-stock',
             'valider-détérioration',
+            'consulter-comptabilite',
         ]);
 
         $caissier = Role::findOrCreate('Caissier', 'web');
@@ -84,6 +86,12 @@ class RoleSeeder extends Seeder
             'gérer-inventaires',
             'gérer-approvisionnements',
             'ajuster-stock',
+        ]);
+
+        $comptable = Role::findOrCreate('Comptable', 'web');
+        $comptable->givePermissionTo([
+            'voir-dashboard',
+            'consulter-comptabilite',
         ]);
     }
 }

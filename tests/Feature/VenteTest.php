@@ -382,3 +382,32 @@ test('calcule correctement la monnaie et le montant net encaisse en caisse sur l
     $showResponse->assertSee('Net Encaissé en Caisse');
     $showResponse->assertSee('8 000 FCFA');
 });
+
+test('peut choisir une date specifique pour une vente', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Vendeur');
+    $produit = Produit::factory()->create(['unite_base' => 'BOUTEILLE', 'prix_vente' => 5000]);
+    Stock::create(['produit_id' => $produit->id, 'quantite' => 20]);
+    $cond = Conditionnement::factory()->create(['produit_id' => $produit->id, 'prix_vente' => 5000]);
+
+    $dateChoisie = '2026-07-15 10:30:00';
+
+    $response = $this->actingAs($user)->post(route('ventes.store'), [
+        'date' => $dateChoisie,
+        'mode_paiement' => ModePaiement::ESPECES->value,
+        'montant_paye' => 5000,
+        'items' => [
+            [
+                'produit_id' => $produit->id,
+                'conditionnement_id' => $cond->id,
+                'quantite_conditionnement' => 1,
+                'prix' => 5000,
+            ],
+        ],
+    ]);
+
+    $response->assertRedirect();
+
+    $vente = Vente::latest('id')->first();
+    expect($vente->date->format('Y-m-d H:i:s'))->toBe($dateChoisie);
+});

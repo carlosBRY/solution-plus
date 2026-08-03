@@ -148,13 +148,25 @@
                             <input class="form-control" type="number" step="0.01" id="remise" name="remise" value="0">
                         </div>
                         <div class="col-6">
-                            <label class="form-label" for="tva">TVA globale (FCFA)</label>
+                            <label class="form-label" for="tva">TVA (FCFA)</label>
                             <input class="form-control" type="number" step="0.01" id="tva" name="tva" value="0">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label" for="bic">BIC (FCFA)</label>
+                            <input class="form-control" type="number" step="0.01" id="bic" name="bic" value="0">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label" for="fsp">FSP (FCFA)</label>
+                            <input class="form-control" type="number" step="0.01" id="fsp" name="fsp" value="0">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label" for="autres_taxes">Autres taxes (FCFA)</label>
+                            <input class="form-control" type="number" step="0.01" id="autres_taxes" name="autres_taxes" value="0">
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="bi bi-check-circle me-1"></i> Enregistrer l'Approvisionnement</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn" data-confirm="Confirmer l'enregistrement de cet approvisionnement ? Le stock sera incrémenté."><i class="bi bi-check-circle me-1"></i> Enregistrer l'Approvisionnement</button>
                         <a href="{{ route('approvisionnements.index') }}" class="btn btn-outline-secondary">Annuler</a>
                     </div>
                 </div>
@@ -171,6 +183,9 @@
             const fournisseurSelect = document.getElementById('fournisseur_id');
             const remiseInput = document.getElementById('remise');
             const tvaInput = document.getElementById('tva');
+            const bicInput = document.getElementById('bic');
+            const fspInput = document.getElementById('fsp');
+            const autresTaxesInput = document.getElementById('autres_taxes');
             const compteSelect = document.getElementById('compte_financier_id');
             const soldeAlerte = document.getElementById('soldeAlerte');
             const soldeAlerteTexte = document.getElementById('soldeAlerteTexte');
@@ -202,7 +217,10 @@
                 });
                 const remise = parseFloat(remiseInput.value) || 0;
                 const tva = parseFloat(tvaInput.value) || 0;
-                return Math.max(0, sousTotal - remise + tva);
+                const bic = parseFloat(bicInput.value) || 0;
+                const fsp = parseFloat(fspInput.value) || 0;
+                const autresTaxes = parseFloat(autresTaxesInput.value) || 0;
+                return Math.max(0, sousTotal - remise + tva + bic + fsp + autresTaxes);
             }
 
             function checkSoldeCompte() {
@@ -246,9 +264,7 @@
                     sousTotal += totalLigne;
                 });
 
-                const remise = parseFloat(remiseInput.value) || 0;
-                const tva = parseFloat(tvaInput.value) || 0;
-                const totalGeneral = Math.max(0, sousTotal - remise + tva);
+                const totalGeneral = getCurrentTotalGeneral();
 
                 sousTotalDisplay.textContent = formatFCFA(sousTotal);
                 totalGeneralDisplay.textContent = formatFCFA(totalGeneral);
@@ -355,6 +371,9 @@
             document.querySelectorAll('.item-row').forEach(bindProduitSelect);
             remiseInput.addEventListener('input', recalculateTotals);
             tvaInput.addEventListener('input', recalculateTotals);
+            bicInput.addEventListener('input', recalculateTotals);
+            fspInput.addEventListener('input', recalculateTotals);
+            autresTaxesInput.addEventListener('input', recalculateTotals);
             compteSelect.addEventListener('change', checkSoldeCompte);
 
             document.getElementById('appForm').addEventListener('submit', function(e) {

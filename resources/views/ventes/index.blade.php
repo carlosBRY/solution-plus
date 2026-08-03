@@ -6,9 +6,11 @@
                 <h1 class="h3 mb-0">Gestion des Ventes</h1>
             </div>
             <div>
-                <a class="btn btn-primary btn-sm" href="{{ route('ventes.create') }}">
-                    <i class="bi bi-cart-plus me-1"></i> Nouvelle Vente / Caisse
-                </a>
+                @can('gérer-ventes')
+                    <a class="btn btn-primary btn-sm" href="{{ route('ventes.create') }}">
+                        <i class="bi bi-cart-plus me-1"></i> Nouvelle Vente / Caisse
+                    </a>
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -135,8 +137,7 @@
         </div>
 
         @if($ventes->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
-                <span class="text-muted small">Affichage de {{ $ventes->firstItem() }} à {{ $ventes->lastItem() }} sur {{ $ventes->total() }}</span>
+            <div class="px-3 py-3 border-top">
                 {{ $ventes->links() }}
             </div>
         @endif

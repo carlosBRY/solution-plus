@@ -6,9 +6,17 @@
                 <h1 class="h3 mb-0">Caisse Principale & Comptes Financiers</h1>
             </div>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTransfert">
-                    <i class="bi bi-arrow-left-right me-1"></i> Nouveau Transfert
-                </button>
+                @can('gérer-caisses')
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalDeposer">
+                        <i class="bi bi-plus-circle me-1"></i> Ajouter de l'argent
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRetirer">
+                        <i class="bi bi-dash-circle me-1"></i> Retirer de l'argent
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTransfert">
+                        <i class="bi bi-arrow-left-right me-1"></i> Nouveau Transfert
+                    </button>
+                @endcan
                 @can('gérer-parametres')
                     <a href="{{ route('parametres.comptes.index') }}" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-gear me-1"></i> Configurer Comptes
@@ -238,7 +246,93 @@
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Valider le Transfert</button>
+                        <button type="submit" class="btn btn-primary" data-confirm="Confirmer ce transfert de fonds entre comptes ?"><i class="bi bi-check-lg me-1"></i> Valider le Transfert</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Ajouter de l'argent (Dépôt) --}}
+    <div class="modal fade" id="modalDeposer" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="POST" action="{{ route('comptes.deposer') }}">
+                    @csrf
+                    <div class="modal-header bg-success text-white border-0">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-plus-circle me-2"></i>Ajouter de l'argent (Dépôt en Caisse)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="deposer_compte_id" class="form-label fw-medium">Caisse / Compte Destination <span class="text-danger">*</span></label>
+                            <select id="deposer_compte_id" name="compte_id" class="form-select" required>
+                                <option value="">Choisir la caisse...</option>
+                                @foreach($comptes as $c)
+                                    <option value="{{ $c->id }}">
+                                        {{ $c->nom }} (Solde actuel: {{ number_format($c->solde_courant, 0, ',', ' ') }} FCFA)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="deposer_montant" class="form-label fw-medium">Montant à ajouter (FCFA) <span class="text-danger">*</span></label>
+                            <input type="number" id="deposer_montant" name="montant" class="form-control form-control-lg" min="1" required placeholder="Ex: 50000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="deposer_motif" class="form-label fw-medium">Motif de l'apport d'argent <span class="text-danger">*</span></label>
+                            <input type="text" id="deposer_motif" name="motif" class="form-control" required placeholder="Ex: Apport personnel, Alimentation de caisse du jour, Fond de caisse...">
+                            <small class="text-muted">Le motif est obligatoire pour la traçabilité comptable.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success" data-confirm="Confirmer l'ajout de fonds dans la caisse ?"><i class="bi bi-check-lg me-1"></i> Valider l'Ajout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Retirer de l'argent (Retrait) --}}
+    <div class="modal fade" id="modalRetirer" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="POST" action="{{ route('comptes.retirer') }}">
+                    @csrf
+                    <div class="modal-header bg-danger text-white border-0">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-dash-circle me-2"></i>Retirer de l'argent (Retrait de Caisse)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="retirer_compte_id" class="form-label fw-medium">Caisse / Compte Source <span class="text-danger">*</span></label>
+                            <select id="retirer_compte_id" name="compte_id" class="form-select" required>
+                                <option value="">Choisir la caisse...</option>
+                                @foreach($comptes as $c)
+                                    <option value="{{ $c->id }}">
+                                        {{ $c->nom }} (Solde actuel: {{ number_format($c->solde_courant, 0, ',', ' ') }} FCFA)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="retirer_montant" class="form-label fw-medium">Montant à retirer (FCFA) <span class="text-danger">*</span></label>
+                            <input type="number" id="retirer_montant" name="montant" class="form-control form-control-lg" min="1" required placeholder="Ex: 25000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="retirer_motif" class="form-label fw-medium">Motif du retrait <span class="text-danger">*</span></label>
+                            <input type="text" id="retirer_motif" name="motif" class="form-control" required placeholder="Ex: Prélèvement gérant, Versement banque, Avance...">
+                            <small class="text-muted">Le motif est obligatoire pour la traçabilité comptable.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger" data-confirm="Confirmer le retrait de fonds de la caisse ?"><i class="bi bi-check-lg me-1"></i> Valider le Retrait</button>
                     </div>
                 </form>
             </div>

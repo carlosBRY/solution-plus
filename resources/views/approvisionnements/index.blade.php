@@ -6,9 +6,11 @@
                 <h1 class="h3 mb-0">Gestion des Approvisionnements</h1>
             </div>
             <div>
-                <a class="btn btn-primary btn-sm" href="{{ route('approvisionnements.create') }}">
-                    <i class="bi bi-plus-circle me-1"></i> Nouvel Approvisionnement
-                </a>
+                @can('gérer-approvisionnements')
+                    <a class="btn btn-primary btn-sm" href="{{ route('approvisionnements.create') }}">
+                        <i class="bi bi-plus-circle me-1"></i> Nouvel Approvisionnement
+                    </a>
+                @endcan
             </div>
         </div>
     </x-slot>

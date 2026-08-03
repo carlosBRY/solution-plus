@@ -242,7 +242,7 @@
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" data-confirm="Confirmer l'ajustement de stock ? Cette opération modifiera la quantité en stock.">
                             <i class="bi bi-check-lg me-1"></i>Valider l'ajustement
                         </button>
                     </div>

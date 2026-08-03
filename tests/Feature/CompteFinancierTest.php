@@ -161,3 +161,67 @@ test('refoule le transfert entre comptes si le solde du compte source est insuff
     expect((float) $source->fresh()->solde_courant)->toBe(3000.0);
     expect((float) $dest->fresh()->solde_courant)->toBe(5000.0);
 });
+
+test('peut effectuer un ajout d argent (depot) via la route HTTP avec motif obligatoire', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gestionnaire');
+
+    $compte = CompteFinancier::create(['nom' => 'Caisse Especes', 'mode' => 'ESP_DEPOT', 'solde_courant' => 10000, 'actif' => true]);
+
+    $response = $this->actingAs($user)->post(route('comptes.deposer'), [
+        'compte_id' => $compte->id,
+        'montant' => 25000,
+        'motif' => 'Apport personnel gérant',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    expect((float) $compte->fresh()->solde_courant)->toBe(35000.0);
+    $this->assertDatabaseHas('mouvements_compte', [
+        'compte_financier_id' => $compte->id,
+        'type' => 'CREDIT',
+        'montant' => 25000,
+        'motif' => 'Apport personnel gérant',
+    ]);
+});
+
+test('exige un motif pour l ajout d argent', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gestionnaire');
+
+    $compte = CompteFinancier::create(['nom' => 'Caisse Especes', 'mode' => 'ESP_MOTIF', 'solde_courant' => 10000, 'actif' => true]);
+
+    $response = $this->actingAs($user)->post(route('comptes.deposer'), [
+        'compte_id' => $compte->id,
+        'montant' => 5000,
+        'motif' => '',
+    ]);
+
+    $response->assertSessionHasErrors(['motif']);
+    expect((float) $compte->fresh()->solde_courant)->toBe(10000.0);
+});
+
+test('peut effectuer un retrait d argent via la route HTTP avec motif obligatoire', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gestionnaire');
+
+    $compte = CompteFinancier::create(['nom' => 'Caisse Especes', 'mode' => 'ESP_RETRAIT', 'solde_courant' => 50000, 'actif' => true]);
+
+    $response = $this->actingAs($user)->post(route('comptes.retirer'), [
+        'compte_id' => $compte->id,
+        'montant' => 15000,
+        'motif' => 'Prélèvement gérant pour achats urgents',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success');
+
+    expect((float) $compte->fresh()->solde_courant)->toBe(35000.0);
+    $this->assertDatabaseHas('mouvements_compte', [
+        'compte_financier_id' => $compte->id,
+        'type' => 'DEBIT',
+        'montant' => 15000,
+        'motif' => 'Prélèvement gérant pour achats urgents',
+    ]);
+});

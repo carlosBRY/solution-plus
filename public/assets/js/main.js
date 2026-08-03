@@ -67,6 +67,78 @@
     var mediaQuery = window.matchMedia(desktopMedia);
     var storageAvailable = canUseStorage();
 
+    function initModalTeleport() {
+      document.addEventListener("show.bs.modal", function (event) {
+        var modal = event.target;
+        if (modal && modal.parentElement !== document.body) {
+          document.body.appendChild(modal);
+        }
+      });
+    }
+
+    function setupPasswordToggles(container) {
+      var inputs = (container || document).querySelectorAll('input[type="password"]');
+      Array.prototype.forEach.call(inputs, function (input) {
+        if (input.dataset.hasPasswordToggle) return;
+        input.dataset.hasPasswordToggle = "true";
+
+        var group = input.closest(".input-group");
+        var toggleBtn = group ? group.querySelector(".btn-toggle-password, [data-toggle-password]") : null;
+
+        if (!toggleBtn) {
+          if (!group) {
+            group = document.createElement("div");
+            group.className = "input-group";
+            input.parentNode.insertBefore(group, input);
+            group.appendChild(input);
+          }
+
+          toggleBtn = document.createElement("button");
+          toggleBtn.type = "button";
+          toggleBtn.className = "btn btn-outline-secondary btn-toggle-password";
+          toggleBtn.setAttribute("aria-label", "Afficher/Masquer le mot de passe");
+          toggleBtn.setAttribute("title", "Afficher le mot de passe");
+          toggleBtn.innerHTML = '<i class="bi bi-eye"></i>';
+          group.appendChild(toggleBtn);
+        }
+      });
+    }
+
+    function initPasswordToggles() {
+      setupPasswordToggles(document);
+
+      document.addEventListener("shown.bs.modal", function (e) {
+        setupPasswordToggles(e.target);
+      });
+
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".btn-toggle-password, [data-toggle-password]");
+        if (!btn) return;
+
+        var group = btn.closest(".input-group") || btn.parentNode;
+        if (!group) return;
+
+        var input = group.querySelector("input");
+        if (!input) return;
+
+        e.preventDefault();
+
+        var isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+
+        var icon = btn.querySelector("i");
+        if (icon) {
+          if (isPassword) {
+            icon.className = "bi bi-eye-slash";
+            btn.setAttribute("title", "Masquer le mot de passe");
+          } else {
+            icon.className = "bi bi-eye";
+            btn.setAttribute("title", "Afficher le mot de passe");
+          }
+        }
+      });
+    }
+
     function initValidation() {
       var forms = document.querySelectorAll(".needs-validation");
 
@@ -141,6 +213,8 @@
       });
     }
 
+    initModalTeleport();
+    initPasswordToggles();
     initValidation();
     initTableSearch();
     initThemeToggle();

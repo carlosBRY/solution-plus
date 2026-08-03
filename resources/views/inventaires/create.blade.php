@@ -113,7 +113,7 @@
                     <i class="bi bi-info-circle me-1"></i>
                     Tous les champs « Stock Physique » sont obligatoires.
                 </div>
-                <button type="submit" class="btn btn-success btn-lg" id="btnValider">
+                <button type="submit" class="btn btn-success btn-lg" id="btnValider" data-confirm="Confirmer la validation de cet inventaire ? Les stocks seront ajustés en fonction du comptage physique.">
                     <i class="bi bi-check-circle me-2"></i>Valider l'Inventaire
                 </button>
             </div>

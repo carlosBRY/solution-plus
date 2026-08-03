@@ -6,9 +6,11 @@
                 <h1 class="h3 mb-0">Gestion des Dépenses</h1>
             </div>
             <div>
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNouvelleDepense">
-                    <i class="bi bi-plus-circle me-1"></i> Enregistrer une Dépense
-                </button>
+                @can('gérer-depenses')
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNouvelleDepense">
+                        <i class="bi bi-plus-circle me-1"></i> Enregistrer une Dépense
+                    </button>
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -172,7 +174,7 @@
                                         </div>
                                         <div class="modal-footer bg-light">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                            <button type="submit" class="btn btn-primary fw-bold">Mettre à jour</button>
+                                            <button type="submit" class="btn btn-primary fw-bold" data-confirm="Confirmer la mise à jour de cette dépense ?">Mettre à jour</button>
                                         </div>
                                     </form>
                                 </div>
@@ -213,8 +215,7 @@
         </div>
 
         @if($depenses->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
-                <span class="text-muted small">Affichage de {{ $depenses->firstItem() }} à {{ $depenses->lastItem() }} sur {{ $depenses->total() }}</span>
+            <div class="px-3 py-3 border-top">
                 {{ $depenses->links() }}
             </div>
         @endif
@@ -282,7 +283,7 @@
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
+                        <button type="submit" class="btn btn-primary fw-bold" data-confirm="Confirmer l'enregistrement de cette dépense ? Le compte sera débité."><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
                     </div>
                 </form>
             </div>

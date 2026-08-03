@@ -343,7 +343,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i> Enregistrer la Vente / Consignation</button>
+                        <button type="submit" class="btn btn-primary" data-confirm="Confirmer l'enregistrement de ce mouvement de casier / consigne ?"><i class="bi bi-check-circle me-1"></i> Enregistrer la Vente / Consignation</button>
                     </div>
                 </div>
             </form>
@@ -427,7 +427,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i> Ajouter au Stock Cave</button>
+                        <button type="submit" class="btn btn-success" data-confirm="Confirmer l'ajout / la mise à jour des caisses et bouteilles en cave ?"><i class="bi bi-plus-circle me-1"></i> Ajouter au Stock Cave</button>
                     </div>
                 </div>
             </form>

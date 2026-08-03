@@ -6,9 +6,11 @@
                 <h1 class="h3 mb-0">Détériorations & Casses</h1>
             </div>
             <div>
-                <a class="btn btn-primary btn-sm" href="{{ route('deteriorations.create') }}">
-                    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Nouvelle Déclaration
-                </a>
+                @can('gérer-stocks')
+                    <a class="btn btn-primary btn-sm" href="{{ route('deteriorations.create') }}">
+                        <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Nouvelle Déclaration
+                    </a>
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -100,15 +102,17 @@
                                 <a href="{{ route('deteriorations.show', $det) }}" class="btn btn-outline-primary btn-sm me-1" title="Voir les détails">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if($det->isEstBrouillon())
-                                    <form method="POST" action="{{ route('deteriorations.destroy', $det) }}" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Supprimer ce brouillon ?')" title="Supprimer">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                @endif
+                                @can('gérer-stocks')
+                                    @if($det->isEstBrouillon())
+                                        <form method="POST" action="{{ route('deteriorations.destroy', $det) }}" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Supprimer ce brouillon ?')" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -121,8 +125,7 @@
         </div>
 
         @if($deteriorations->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
-                <span class="text-muted small">Affichage de {{ $deteriorations->firstItem() }} à {{ $deteriorations->lastItem() }} sur {{ $deteriorations->total() }}</span>
+            <div class="px-3 py-3 border-top">
                 {{ $deteriorations->links() }}
             </div>
         @endif

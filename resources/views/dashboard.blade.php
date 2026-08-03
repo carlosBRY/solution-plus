@@ -78,7 +78,7 @@
         <div class="card-body p-4">
             <div class="row g-4">
                 {{-- 1. Soldes des Comptes & Caisse Principale --}}
-                <div class="col-12 col-md-6 col-xl-3 border-end-md">
+                <div class="col-12 col-md-6 col-xl-3 border-end-md d-flex flex-column">
                     <div class="d-flex align-items-center mb-3">
                         <div class="badge bg-primary-subtle text-primary p-2 rounded me-2">
                             <i class="bi bi-bank fs-5"></i>
@@ -88,20 +88,22 @@
                             <small class="text-muted">Caisse principale & comptes</small>
                         </div>
                     </div>
-                    <div class="pe-xl-2">
-                        @forelse($comptesFinanciers as $compte)
-                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom-dashed">
-                                <span class="small fw-semibold text-secondary">
-                                    <i class="bi bi-credit-card-2-front me-1"></i>{{ $compte->nom }}
-                                </span>
-                                <span class="fw-bold text-dark small">
-                                    {{ number_format($compte->solde_courant, 0, ',', ' ') }} FCFA
-                                </span>
-                            </div>
-                        @empty
-                            <span class="text-muted small">Aucun compte financier configuré.</span>
-                        @endforelse
-                        <div class="d-flex justify-content-between align-items-center mt-2 pt-1 fw-bold">
+                    <div class="pe-xl-2 flex-grow-1 d-flex flex-column justify-content-between">
+                        <div>
+                            @forelse($comptesFinanciers as $compte)
+                                <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom-dashed">
+                                    <span class="small fw-semibold text-secondary">
+                                        <i class="bi bi-credit-card-2-front me-1"></i>{{ $compte->nom }}
+                                    </span>
+                                    <span class="fw-bold text-dark small">
+                                        {{ number_format($compte->solde_courant, 0, ',', ' ') }} FCFA
+                                    </span>
+                                </div>
+                            @empty
+                                <span class="text-muted small">Aucun compte financier configuré.</span>
+                            @endforelse
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top fw-bold">
                             <span class="small text-primary">TOTAL TRÉSORERIE</span>
                             <span class="text-primary">
                                 {{ number_format($comptesFinanciers->sum('solde_courant'), 0, ',', ' ') }} FCFA
@@ -111,7 +113,7 @@
                 </div>
 
                 {{-- 2. Ventes (Jour / Semaine / Mois) --}}
-                <div class="col-12 col-md-6 col-xl-3 border-end-xl">
+                <div class="col-12 col-md-6 col-xl-3 border-end-xl d-flex flex-column">
                     <div class="d-flex align-items-center mb-3">
                         <div class="badge bg-success-subtle text-success p-2 rounded me-2">
                             <i class="bi bi-cart-check fs-5"></i>
@@ -121,7 +123,7 @@
                             <small class="text-muted">Ventes réalisées</small>
                         </div>
                     </div>
-                    <div class="space-y-2">
+                    <div class="d-flex flex-column gap-2 flex-grow-1 justify-content-between">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
                             <span class="small text-muted fw-semibold">Aujourd'hui :</span>
                             <span class="fw-bold text-success">{{ number_format($ventesJour, 0, ',', ' ') }} FCFA</span>
@@ -138,7 +140,7 @@
                 </div>
 
                 {{-- 3. Dépenses (Jour / Mois) --}}
-                <div class="col-12 col-md-6 col-xl-3 border-end-md">
+                <div class="col-12 col-md-6 col-xl-3 border-end-md d-flex flex-column">
                     <div class="d-flex align-items-center mb-3">
                         <div class="badge bg-danger-subtle text-danger p-2 rounded me-2">
                             <i class="bi bi-arrow-down-right-circle fs-5"></i>
@@ -148,7 +150,7 @@
                             <small class="text-muted">Sorties de caisse</small>
                         </div>
                     </div>
-                    <div class="space-y-2">
+                    <div class="d-flex flex-column gap-2 flex-grow-1 justify-content-between">
                         <div class="d-flex justify-content-between align-items-center p-2 rounded bg-light">
                             <span class="small text-muted fw-semibold">Aujourd'hui :</span>
                             <span class="fw-bold text-danger">{{ number_format($depensesJour, 0, ',', ' ') }} FCFA</span>
@@ -161,7 +163,7 @@
                 </div>
 
                 {{-- 4. Crédits Octroyés --}}
-                <div class="col-12 col-md-6 col-xl-3">
+                <div class="col-12 col-md-6 col-xl-3 d-flex flex-column">
                     <div class="d-flex align-items-center mb-3">
                         <div class="badge bg-warning-subtle text-warning p-2 rounded me-2">
                             <i class="bi bi-person-exclamation fs-5"></i>
@@ -171,7 +173,7 @@
                             <small class="text-muted">Encours créances clients</small>
                         </div>
                     </div>
-                    <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 h-100 d-flex flex-column justify-content-center">
+                    <div class="p-3 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 flex-grow-1 d-flex flex-column justify-content-center">
                         <span class="small text-muted fw-semibold mb-1">Total Dettes Clients en cours :</span>
                         <h4 class="fw-bold text-warning-emphasis mb-0">
                             {{ number_format($totalCreditsOctroyes, 0, ',', ' ') }} FCFA

@@ -325,8 +325,7 @@
         </div>
 
         @if($produits->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
-                <span class="text-muted small">Affichage de {{ $produits->firstItem() }} à {{ $produits->lastItem() }} sur {{ $produits->total() }}</span>
+            <div class="px-3 py-3 border-top">
                 {{ $produits->links() }}
             </div>
         @endif

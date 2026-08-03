@@ -6,9 +6,11 @@
                 <h1 class="h3 mb-0">Gestion des Fournisseurs</h1>
             </div>
             <div>
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createFournisseurModal">
-                    <i class="bi bi-building-add me-1"></i> Nouveau Fournisseur
-                </button>
+                @can('gérer-fournisseurs')
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createFournisseurModal">
+                        <i class="bi bi-building-add me-1"></i> Nouveau Fournisseur
+                    </button>
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -80,12 +82,14 @@
                                 <a href="{{ route('fournisseurs.show', $f) }}" class="btn btn-outline-primary btn-sm me-1" title="Voir les livraisons">
                                     <i class="bi bi-eye"></i> Fiche
                                 </a>
-                                <button type="button" class="btn btn-outline-secondary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editFournisseurModal-{{ $f->id }}" title="Modifier">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteFournisseurModal-{{ $f->id }}" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                @can('gérer-fournisseurs')
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editFournisseurModal-{{ $f->id }}" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteFournisseurModal-{{ $f->id }}" title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                @endcan
 
                                 {{-- Edit Modal --}}
                                 <div class="modal fade text-start" id="editFournisseurModal-{{ $f->id }}" tabindex="-1" aria-hidden="true">
@@ -169,8 +173,7 @@
         </div>
 
         @if($fournisseurs->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
-                <span class="text-muted small">Affichage de {{ $fournisseurs->firstItem() }} à {{ $fournisseurs->lastItem() }} sur {{ $fournisseurs->total() }}</span>
+            <div class="px-3 py-3 border-top">
                 {{ $fournisseurs->links() }}
             </div>
         @endif

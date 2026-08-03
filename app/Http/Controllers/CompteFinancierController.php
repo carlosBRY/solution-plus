@@ -115,4 +115,70 @@ class CompteFinancierController extends Controller
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
     }
+
+    /**
+     * Effectuer un dépôt (ajout d'argent) sur un compte financier / caisse.
+     */
+    public function deposer(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'compte_id' => ['required', 'exists:comptes_financiers,id'],
+            'montant' => ['required', 'numeric', 'min:1'],
+            'motif' => ['required', 'string', 'max:255'],
+        ]);
+
+        $compte = CompteFinancier::findOrFail($validated['compte_id']);
+
+        if (! $compte->actif) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Le compte sélectionné doit être actif.');
+        }
+
+        try {
+            $this->compteService->crediter(
+                $compte,
+                $request->user(),
+                (float) $validated['montant'],
+                $validated['motif']
+            );
+
+            return redirect()->back()
+                ->with('success', 'Ajout de '.number_format($validated['montant'], 0, ',', ' ')." FCFA sur la caisse {$compte->nom} effectué avec succès.");
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Effectuer un retrait (sortie d'argent) sur un compte financier / caisse.
+     */
+    public function retirer(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'compte_id' => ['required', 'exists:comptes_financiers,id'],
+            'montant' => ['required', 'numeric', 'min:1'],
+            'motif' => ['required', 'string', 'max:255'],
+        ]);
+
+        $compte = CompteFinancier::findOrFail($validated['compte_id']);
+
+        if (! $compte->actif) {
+            return redirect()->back()->withInput()
+                ->with('error', 'Le compte sélectionné doit être actif.');
+        }
+
+        try {
+            $this->compteService->debiter(
+                $compte,
+                $request->user(),
+                (float) $validated['montant'],
+                $validated['motif']
+            );
+
+            return redirect()->back()
+                ->with('success', 'Retrait de '.number_format($validated['montant'], 0, ',', ' ')." FCFA sur la caisse {$compte->nom} effectué avec succès.");
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
 }

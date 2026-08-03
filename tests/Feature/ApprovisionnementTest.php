@@ -124,3 +124,44 @@ test('refoule un approvisionnement si le solde du compte financier est insuffisa
         'reference_facture' => 'FACT-TEST-SOLDE',
     ]);
 });
+
+test('creer un approvisionnement avec les 4 taxes calcule correctement le total', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gérant');
+    $fournisseur = Fournisseur::factory()->create();
+    $produit = Produit::factory()->create();
+    $cond = Conditionnement::factory()->create(['produit_id' => $produit->id, 'prix_achat' => 10000]);
+
+    $response = $this->actingAs($user)->post(route('approvisionnements.store'), [
+        'fournisseur_id' => $fournisseur->id,
+        'reference_facture' => 'FACT-TAXES-001',
+        'statut' => StatutApprovisionnement::RECEPTIONNE->value,
+        'remise' => 1000,
+        'tva' => 1800,
+        'bic' => 500,
+        'fsp' => 300,
+        'autres_taxes' => 200,
+        'items' => [
+            [
+                'produit_id' => $produit->id,
+                'conditionnement_id' => $cond->id,
+                'quantite_conditionnement' => 2, // Subtotal = 20 000
+                'prix_achat' => 10000,
+            ],
+        ],
+    ]);
+
+    $response->assertRedirect();
+
+    // Total expected: 20000 - 1000 + 1800 + 500 + 300 + 200 = 21800
+    $this->assertDatabaseHas('approvisionnements', [
+        'reference_facture' => 'FACT-TAXES-001',
+        'montant' => 20000,
+        'remise' => 1000,
+        'tva' => 1800,
+        'bic' => 500,
+        'fsp' => 300,
+        'autres_taxes' => 200,
+        'total' => 21800,
+    ]);
+});

@@ -9,14 +9,16 @@
                 <a class="btn btn-outline-secondary btn-sm" href="{{ route('deteriorations.index') }}">
                     <i class="bi bi-arrow-left me-1"></i> Retour à la liste
                 </a>
-                @if($deterioration->isEstBrouillon())
-                    <form method="POST" action="{{ route('deteriorations.valider', $deterioration) }}" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Valider cette détérioration et décrémenter le stock ? Cette action est irréversible.')">
-                            <i class="bi bi-check-circle me-1"></i> Valider & Décrémenter le Stock
-                        </button>
-                    </form>
-                @endif
+                @can('gérer-stocks')
+                    @if($deterioration->isEstBrouillon())
+                        <form method="POST" action="{{ route('deteriorations.valider', $deterioration) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Valider cette détérioration et décrémenter le stock ? Cette action est irréversible.')">
+                                <i class="bi bi-check-circle me-1"></i> Valider & Décrémenter le Stock
+                            </button>
+                        </form>
+                    @endif
+                @endcan
             </div>
         </div>
     </x-slot>

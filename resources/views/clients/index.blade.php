@@ -6,9 +6,11 @@
                 <h1 class="h3 mb-0">Gestion des Clients & Crédits</h1>
             </div>
             <div>
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createClientModal">
-                    <i class="bi bi-person-plus me-1"></i> Nouveau Client
-                </button>
+                @can('gérer-clients')
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createClientModal">
+                        <i class="bi bi-person-plus me-1"></i> Nouveau Client
+                    </button>
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -203,8 +205,7 @@
         </div>
 
         @if($clients->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
-                <span class="text-muted small">Affichage de {{ $clients->firstItem() }} à {{ $clients->lastItem() }} sur {{ $clients->total() }}</span>
+            <div class="px-3 py-3 border-top">
                 {{ $clients->links() }}
             </div>
         @endif

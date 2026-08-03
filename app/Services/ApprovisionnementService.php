@@ -48,6 +48,9 @@ class ApprovisionnementService
                 'montant' => 0,
                 'remise' => $data['remise'] ?? 0,
                 'tva' => $data['tva'] ?? 0,
+                'bic' => $data['bic'] ?? 0,
+                'fsp' => $data['fsp'] ?? 0,
+                'autres_taxes' => $data['autres_taxes'] ?? 0,
                 'total' => 0,
                 'mode' => $compte?->mode ?? ($data['mode'] ?? null),
                 'compte_financier_id' => $compte?->id,
@@ -102,7 +105,10 @@ class ApprovisionnementService
 
             $remise = (float) ($data['remise'] ?? 0);
             $tva = (float) ($data['tva'] ?? 0);
-            $totalFinal = max(0, $montantSousTotal - $remise + $tva);
+            $bic = (float) ($data['bic'] ?? 0);
+            $fsp = (float) ($data['fsp'] ?? 0);
+            $autresTaxes = (float) ($data['autres_taxes'] ?? 0);
+            $totalFinal = max(0, $montantSousTotal - $remise + $tva + $bic + $fsp + $autresTaxes);
 
             $approvisionnement->update([
                 'montant' => $montantSousTotal,

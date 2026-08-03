@@ -9,14 +9,16 @@
                 <a class="btn btn-outline-secondary btn-sm" href="{{ route('approvisionnements.index') }}">
                     <i class="bi bi-arrow-left me-1"></i> Retour à la liste
                 </a>
-                @if($approvisionnement->statut->value === 'EN_ATTENTE' || $approvisionnement->statut === \App\Enums\StatutApprovisionnement::EN_ATTENTE)
-                    <form method="POST" action="{{ route('approvisionnements.receptionner', $approvisionnement) }}" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirmer la réception de la commande et créditer les stocks ?')">
-                            <i class="bi bi-box-arrow-in-down me-1"></i> Réceptionner les Marchandises
-                        </button>
-                    </form>
-                @endif
+                @can('gérer-approvisionnements')
+                    @if($approvisionnement->statut->value === 'EN_ATTENTE' || $approvisionnement->statut === \App\Enums\StatutApprovisionnement::EN_ATTENTE)
+                        <form method="POST" action="{{ route('approvisionnements.receptionner', $approvisionnement) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Confirmer la réception de la commande et créditer les stocks ?')">
+                                <i class="bi bi-box-arrow-in-down me-1"></i> Réceptionner les Marchandises
+                            </button>
+                        </form>
+                    @endif
+                @endcan
             </div>
         </div>
     </x-slot>
@@ -83,6 +85,24 @@
                                 <tr>
                                     <td colspan="5" class="text-end text-muted">TVA :</td>
                                     <td>+{{ number_format($approvisionnement->tva, 0, ',', ' ') }} FCFA</td>
+                                </tr>
+                            @endif
+                            @if($approvisionnement->bic > 0)
+                                <tr>
+                                    <td colspan="5" class="text-end text-muted">BIC :</td>
+                                    <td>+{{ number_format($approvisionnement->bic, 0, ',', ' ') }} FCFA</td>
+                                </tr>
+                            @endif
+                            @if($approvisionnement->fsp > 0)
+                                <tr>
+                                    <td colspan="5" class="text-end text-muted">FSP :</td>
+                                    <td>+{{ number_format($approvisionnement->fsp, 0, ',', ' ') }} FCFA</td>
+                                </tr>
+                            @endif
+                            @if($approvisionnement->autres_taxes > 0)
+                                <tr>
+                                    <td colspan="5" class="text-end text-muted">Autres taxes :</td>
+                                    <td>+{{ number_format($approvisionnement->autres_taxes, 0, ',', ' ') }} FCFA</td>
                                 </tr>
                             @endif
                             <tr>

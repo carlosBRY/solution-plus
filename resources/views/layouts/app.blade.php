@@ -23,12 +23,59 @@
     .ts-dropdown .option.active { background-color: #0d6efd; color: #fff; }
     .modal .ts-dropdown { z-index: 10060 !important; }
 
-    /* Table pagination controls */
+    /* Table pagination controls (JS fallback) */
     .table-pagination-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0; }
     .table-pagination-controls .pagination-info { font-size: 0.8125rem; color: #6c757d; }
     .table-pagination-controls .btn-group .btn { font-size: 0.8125rem; padding: 0.25rem 0.625rem; }
     .table-pagination-controls .btn-group .btn.active { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
     .table-pagination-controls select.per-page-select { font-size: 0.8125rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; border: 1px solid #dee2e6; }
+
+    /* Modern Bootstrap 5 Pagination Design */
+    .pagination { margin-bottom: 0; gap: 0.25rem; }
+    .pagination .page-item .page-link {
+      border-radius: 0.375rem !important;
+      border: 1px solid #dee2e6;
+      color: #495057;
+      font-weight: 500;
+      font-size: 0.84rem;
+      padding: 0.35rem 0.75rem;
+      transition: all 0.15s ease-in-out;
+    }
+    .pagination .page-item.active .page-link {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(13, 110, 253, 0.25);
+    }
+    .pagination .page-item.disabled .page-link {
+      background-color: #f8f9fa;
+      color: #adb5bd;
+      border-color: #dee2e6;
+    }
+    .pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+      background-color: #e9ecef;
+      color: #0d6efd;
+      border-color: #ced4da;
+    }
+
+    /* Password Eye Toggle Button styling */
+    .btn-toggle-password {
+      border-color: #dee2e6;
+      color: #6c757d;
+      z-index: 4;
+    }
+    .btn-toggle-password:hover,
+    .btn-toggle-password:focus {
+      background-color: #e9ecef;
+      color: #212529;
+      border-color: #ced4da;
+      box-shadow: none;
+    }
+
+    /* Fix Bootstrap Modals on Mobile / iOS WebKit (Stacking Context & Backdrop trap) */
+    .modal { -webkit-overflow-scrolling: touch; z-index: 1055 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    body.modal-open { overflow: hidden; }
   </style>
 </head>
 <body>
@@ -63,6 +110,19 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', function() {
+
+    // ═══════════════════════════════════════════════════════════
+    // 0. Correction Téléportation Modals Bootstrap (iOS / WebKit / Tables)
+    // ═══════════════════════════════════════════════════════════
+    // Téléporte automatiquement tout modal imbriqué dans un <td>, <tr>, <table>
+    // ou .table-responsive directement sous <body> avant son ouverture.
+    // Cela résout le bug iOS Safari où le modal apparaît coincé derrière le backdrop noir.
+    document.addEventListener('show.bs.modal', function(e) {
+      const modal = e.target;
+      if (modal && modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+      }
+    });
 
     // ═══════════════════════════════════════════════════════════
     // 1. Tom Select — Selects avec recherche
@@ -107,9 +167,15 @@
     bodyObserver.observe(document.body, { childList: true, subtree: true });
 
     // ═══════════════════════════════════════════════════════════
-    // 2. Pagination dynamique des tableaux
+    // 2. Pagination dynamique des tableaux (fallback côté client)
     // ═══════════════════════════════════════════════════════════
     document.querySelectorAll('table.table-paginated').forEach(function(table) {
+      // Ignorer si le tableau utilise déjà la pagination serveur de Laravel
+      const parentSection = table.closest('.panel') || table.closest('.card') || table.parentNode;
+      if (parentSection && parentSection.querySelector('.pagination, nav[aria-label*="pagination" i]')) {
+        return;
+      }
+
       const tbody = table.querySelector('tbody');
       if (!tbody) return;
 
@@ -200,6 +266,145 @@
       render();
     });
 
+  });
+  </script>
+
+  {{-- ═══════════════════════════════════════════════════════════ --}}
+  {{-- Modal Global de Confirmation avant Enregistrement         --}}
+  {{-- ═══════════════════════════════════════════════════════════ --}}
+  <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary bg-opacity-10 border-bottom-0">
+          <h5 class="modal-title fw-bold" id="confirmActionModalLabel">
+            <i class="bi bi-shield-check me-2 text-primary"></i>Confirmation
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body py-4">
+          <p class="mb-0 fs-6" id="confirmActionMessage">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+        </div>
+        <div class="modal-footer border-top-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i>Annuler
+          </button>
+          <button type="button" class="btn btn-primary fw-bold" id="confirmActionBtn">
+            <i class="bi bi-check-lg me-1"></i>Confirmer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const modalEl = document.getElementById('confirmActionModal');
+    const confirmModal = new bootstrap.Modal(modalEl);
+    const confirmMessage = document.getElementById('confirmActionMessage');
+    const confirmBtn = document.getElementById('confirmActionBtn');
+    let pendingForm = null;
+    let pendingButton = null;
+
+    // ─── Interception des boutons avec data-confirm ───
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-confirm]');
+      if (!btn) return;
+
+      const form = btn.closest('form');
+      if (!form) return;
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      pendingForm = form;
+      pendingButton = btn;
+      confirmMessage.textContent = btn.dataset.confirm;
+
+      // Adapter le style du bouton de confirmation selon le contexte
+      const isDanger = btn.classList.contains('btn-danger') || btn.classList.contains('btn-outline-danger');
+      confirmBtn.className = isDanger
+        ? 'btn btn-danger fw-bold'
+        : 'btn btn-primary fw-bold';
+      confirmBtn.innerHTML = isDanger
+        ? '<i class="bi bi-trash me-1"></i>Confirmer la suppression'
+        : '<i class="bi bi-check-lg me-1"></i>Confirmer';
+
+      confirmModal.show();
+    });
+
+    // ─── Confirmer et soumettre ───
+    confirmBtn.addEventListener('click', function() {
+      if (!pendingForm) return;
+
+      confirmModal.hide();
+
+      // Marquer le formulaire comme confirmé pour bypasser la re-interception
+      pendingForm.dataset.confirmed = 'true';
+
+      // Désactiver le bouton original + spinner
+      if (pendingButton) {
+        disableButton(pendingButton);
+      }
+
+      pendingForm.submit();
+      pendingForm = null;
+      pendingButton = null;
+    });
+
+    // ─── Protection double-clic sur TOUS les formulaires ───
+    document.addEventListener('submit', function(e) {
+      const form = e.target;
+      if (!form || form.tagName !== 'FORM') return;
+
+      // Ignorer les formulaires de recherche/filtre (GET)
+      if (form.method.toUpperCase() === 'GET') return;
+
+      // Trouver le bouton submit qui a déclenché la soumission
+      const submitBtn = form.querySelector('[type="submit"]:focus, button[type="submit"]');
+
+      // Si le bouton a un data-confirm et le formulaire n'est pas encore confirmé, bloquer
+      if (submitBtn && submitBtn.dataset.confirm && form.dataset.confirmed !== 'true') {
+        return; // Géré par le listener click ci-dessus
+      }
+
+      // Nettoyer le flag de confirmation
+      delete form.dataset.confirmed;
+
+      // Empêcher la double-soumission
+      if (form.dataset.submitting === 'true') {
+        e.preventDefault();
+        return;
+      }
+      form.dataset.submitting = 'true';
+
+      // Désactiver tous les boutons submit du formulaire
+      form.querySelectorAll('[type="submit"]').forEach(function(btn) {
+        disableButton(btn);
+      });
+
+      // Réactiver après 8s en cas d'erreur réseau
+      setTimeout(function() {
+        form.dataset.submitting = '';
+        form.querySelectorAll('[type="submit"]').forEach(function(btn) {
+          enableButton(btn);
+        });
+      }, 8000);
+    });
+
+    function disableButton(btn) {
+      btn.disabled = true;
+      btn.dataset.originalHtml = btn.innerHTML;
+      const label = btn.textContent.trim() || 'Traitement';
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + label + '…';
+    }
+
+    function enableButton(btn) {
+      btn.disabled = false;
+      if (btn.dataset.originalHtml) {
+        btn.innerHTML = btn.dataset.originalHtml;
+        delete btn.dataset.originalHtml;
+      }
+    }
   });
   </script>
 </body>
