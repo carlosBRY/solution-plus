@@ -71,6 +71,8 @@ Route::middleware('auth')->group(function () {
         Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
         Route::delete('clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
         Route::post('clients/{client}/regler-dette', [ClientController::class, 'reglerDette'])->name('clients.regler-dette');
+        Route::post('clients/{client}/ajouter-credit', [ClientController::class, 'ajouterCredit'])->name('clients.ajouter-credit');
+        Route::post('clients/{client}/ajuster-credit', [ClientController::class, 'ajusterCredit'])->name('clients.ajuster-credit');
     });
     Route::middleware('permission:gérer-clients|consulter-comptabilite')->group(function () {
         Route::get('clients', [ClientController::class, 'index'])->name('clients.index');

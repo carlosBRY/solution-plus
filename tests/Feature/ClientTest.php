@@ -169,3 +169,104 @@ test('le remboursement de dette passe la vente a credit en statut PAYEE_CREDIT e
     expect($venteFraiche->statut->value)->toBe(StatutVente::PAYEE_CREDIT->value);
     expect($venteFraiche->date_paiement_credit)->not->toBeNull();
 });
+
+test('un gerant peut ajouter un credit a un client sans passer par une vente', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gérant');
+
+    $client = Client::factory()->create(['solde' => 10000]);
+
+    $response = $this->actingAs($user)->post(route('clients.ajouter-credit', $client), [
+        'montant' => 25000,
+        'motif' => 'Prêt accordé au client',
+    ]);
+
+    $response->assertRedirect(route('clients.show', $client));
+
+    // Le solde du client doit passer de 10 000 à 35 000 FCFA
+    expect((float) $client->fresh()->solde)->toEqual(35000);
+
+    $this->assertDatabaseHas('ajustements_credit', [
+        'client_id' => $client->id,
+        'type' => 'AJOUT',
+        'montant' => 25000,
+        'solde_avant' => 10000,
+        'solde_apres' => 35000,
+    ]);
+});
+
+test('l ajout de credit exige un motif obligatoire', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gérant');
+
+    $client = Client::factory()->create(['solde' => 0]);
+
+    $response = $this->actingAs($user)->post(route('clients.ajouter-credit', $client), [
+        'montant' => 5000,
+        // motif manquant
+    ]);
+
+    $response->assertSessionHasErrors('motif');
+});
+
+test('un admin peut ajuster le solde d un client', function () {
+    $adminRole = Role::findOrCreate('Administrateur', 'web');
+    $adminRole->givePermissionTo(['gérer-clients']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('Administrateur');
+
+    $client = Client::factory()->create(['solde' => 150000]);
+
+    $response = $this->actingAs($admin)->post(route('clients.ajuster-credit', $client), [
+        'nouveau_solde' => 80000,
+        'motif' => 'Correction erreur double comptabilisation vente #123',
+    ]);
+
+    $response->assertRedirect(route('clients.show', $client));
+
+    // Le solde doit être corrigé à 80 000 FCFA
+    expect((float) $client->fresh()->solde)->toEqual(80000);
+
+    $this->assertDatabaseHas('ajustements_credit', [
+        'client_id' => $client->id,
+        'type' => 'AJUSTEMENT',
+        'solde_avant' => 150000,
+        'solde_apres' => 80000,
+    ]);
+});
+
+test('un gerant ne peut pas ajuster le solde d un client', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Gérant');
+
+    $client = Client::factory()->create(['solde' => 50000]);
+
+    $response = $this->actingAs($user)->post(route('clients.ajuster-credit', $client), [
+        'nouveau_solde' => 0,
+        'motif' => 'Tentative non autorisée',
+    ]);
+
+    $response->assertForbidden();
+
+    // Le solde ne doit pas avoir changé
+    expect((float) $client->fresh()->solde)->toEqual(50000);
+});
+
+test('un admin peut mettre le solde a zero pour annuler toute dette', function () {
+    $adminRole = Role::findOrCreate('Administrateur', 'web');
+    $adminRole->givePermissionTo(['gérer-clients']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('Administrateur');
+
+    $client = Client::factory()->create(['solde' => 200000]);
+
+    $response = $this->actingAs($admin)->post(route('clients.ajuster-credit', $client), [
+        'nouveau_solde' => 0,
+        'motif' => 'Annulation complète de la dette sur décision de la direction',
+    ]);
+
+    $response->assertRedirect(route('clients.show', $client));
+    expect((float) $client->fresh()->solde)->toEqual(0);
+});

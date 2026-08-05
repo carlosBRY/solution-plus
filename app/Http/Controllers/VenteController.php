@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ModePaiement;
 use App\Enums\StatutVente;
 use App\Models\Client;
+use App\Models\CompteFinancier;
 use App\Models\Produit;
 use App\Models\Vente;
 use App\Services\VenteService;
@@ -76,7 +77,23 @@ class VenteController extends Controller
         }
 
         $produits = $query->orderBy('nom')->get();
-        $modesPaiement = ModePaiement::cases();
+
+        $comptesActifs = CompteFinancier::actif()->orderBy('nom')->get();
+
+        $modesPaiement = $comptesActifs->map(function ($compte) {
+            return (object) [
+                'value' => $compte->mode,
+                'label' => $compte->nom,
+            ];
+        })->values();
+
+        $hasCredit = $modesPaiement->contains('value', ModePaiement::CREDIT->value);
+        if (! $hasCredit) {
+            $modesPaiement->push((object) [
+                'value' => ModePaiement::CREDIT->value,
+                'label' => 'Vente à Crédit',
+            ]);
+        }
 
         return view('ventes.create', compact('clients', 'produits', 'modesPaiement', 'isAdmin'));
     }

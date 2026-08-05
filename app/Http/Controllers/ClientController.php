@@ -90,12 +90,14 @@ class ClientController extends Controller
         $client->load([
             'ventes' => fn ($q) => $q->latest('date')->take(10),
             'reglementsDettes' => fn ($q) => $q->with('user')->latest('date')->take(10),
+            'ajustementsCredit' => fn ($q) => $q->with('user')->latest('date')->take(10),
         ]);
 
         $totalAchats = $client->ventes()->sum('total');
         $comptes = CompteFinancier::actif()->orderBy('nom')->get();
+        $isAdmin = $client->id ? auth()->user()->hasRole('Administrateur') : false;
 
-        return view('clients.show', compact('client', 'totalAchats', 'comptes'));
+        return view('clients.show', compact('client', 'totalAchats', 'comptes', 'isAdmin'));
     }
 
     /**
@@ -135,6 +137,54 @@ class ClientController extends Controller
 
             return redirect()->route('clients.show', $client)
                 ->with('success', "Règlement de {$reglement->montant} FCFA enregistré avec succès (Reçu N° {$reglement->numero}).");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Ajoute un crédit (dette) à un client sans passer par une vente.
+     * Accessible aux Administrateurs et Gérants.
+     */
+    public function ajouterCredit(Request $request, Client $client): RedirectResponse
+    {
+        $validated = $request->validate([
+            'montant' => ['required', 'numeric', 'min:1'],
+            'motif' => ['required', 'string', 'max:500'],
+        ]);
+
+        try {
+            $ajustement = $this->clientCreditService->ajouterCredit($client, $request->user(), $validated);
+            $montantFormate = number_format($ajustement->montant, 0, ',', ' ');
+
+            return redirect()->route('clients.show', $client)
+                ->with('success', "Crédit de {$montantFormate} FCFA ajouté avec succès pour {$client->nom}.");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Ajuste (corrige) le solde d'un client.
+     * Réservé exclusivement aux Administrateurs.
+     */
+    public function ajusterCredit(Request $request, Client $client): RedirectResponse
+    {
+        if (! $request->user()->hasRole('Administrateur')) {
+            abort(403, 'Seul un administrateur peut ajuster le solde d\'un client.');
+        }
+
+        $validated = $request->validate([
+            'nouveau_solde' => ['required', 'numeric', 'min:0'],
+            'motif' => ['required', 'string', 'max:500'],
+        ]);
+
+        try {
+            $ajustement = $this->clientCreditService->ajusterCredit($client, $request->user(), $validated);
+            $soldeFormate = number_format($ajustement->solde_apres, 0, ',', ' ');
+
+            return redirect()->route('clients.show', $client)
+                ->with('success', "Solde du client ajusté à {$soldeFormate} FCFA.");
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

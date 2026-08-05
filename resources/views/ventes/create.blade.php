@@ -153,7 +153,7 @@
                         <label class="form-label" for="mode_paiement">Mode de Règlement <span class="text-danger">*</span></label>
                         <select class="form-select fw-bold" id="mode_paiement" name="mode_paiement" required>
                             @foreach($modesPaiement as $m)
-                                <option value="{{ $m->value }}">{{ $m->value }}</option>
+                                <option value="{{ is_object($m) ? $m->value : $m }}">{{ is_object($m) ? ($m->label ?? $m->value) : $m }}</option>
                             @endforeach
                         </select>
                     </div>

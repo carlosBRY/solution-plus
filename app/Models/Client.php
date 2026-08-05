@@ -39,6 +39,11 @@ class Client extends Model
         return $this->hasMany(ReglementDette::class);
     }
 
+    public function ajustementsCredit(): HasMany
+    {
+        return $this->hasMany(AjustementCredit::class);
+    }
+
     /**
      * Vérifie si l'ajout d'une nouvelle dette dépasserait le plafond de crédit configuré.
      */

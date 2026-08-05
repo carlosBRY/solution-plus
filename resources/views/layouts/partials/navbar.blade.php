@@ -18,7 +18,7 @@
       <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
         <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
       </button>
-
+<!-- 
       <div class="dropdown">
         <button class="icon-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
           <span class="notification-dot"></span>
@@ -35,7 +35,7 @@
             <span class="notification-time">Il y a 15 min</span>
           </a>
         </div>
-      </div>
+      </div> -->
 
       <div class="dropdown">
         <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">

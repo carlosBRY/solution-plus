@@ -72,9 +72,8 @@
       box-shadow: none;
     }
 
-    /* Fix Bootstrap Modals on Mobile / iOS WebKit (Stacking Context & Backdrop trap) */
-    .modal { -webkit-overflow-scrolling: touch; z-index: 1055 !important; }
-    .modal-backdrop { z-index: 1050 !important; }
+    /* Fix Bootstrap Modals on Mobile / iOS WebKit & Stacking Context */
+    .modal { -webkit-overflow-scrolling: touch; }
     body.modal-open { overflow: hidden; }
   </style>
 </head>
@@ -112,15 +111,42 @@
   document.addEventListener('DOMContentLoaded', function() {
 
     // ═══════════════════════════════════════════════════════════
-    // 0. Correction Téléportation Modals Bootstrap (iOS / WebKit / Tables)
+    // 0. Correction Téléportation & Empilement des Modals Bootstrap (Multi-modals & Stacked z-index)
     // ═══════════════════════════════════════════════════════════
-    // Téléporte automatiquement tout modal imbriqué dans un <td>, <tr>, <table>
-    // ou .table-responsive directement sous <body> avant son ouverture.
-    // Cela résout le bug iOS Safari où le modal apparaît coincé derrière le backdrop noir.
+    // Téléporte/ré-append tout modal sous <body> lors de son ouverture afin que le dernier modal
+    // ouvert (ex: confirmation) se situe physiquement après les autres dans le DOM.
+    // Calcule également des z-index dynamiques pour garantir que le modal de confirmation s'affiche
+    // au-dessus du modal de formulaire et de son backdrop.
     document.addEventListener('show.bs.modal', function(e) {
       const modal = e.target;
-      if (modal && modal.parentElement !== document.body) {
+      if (modal) {
         document.body.appendChild(modal);
+        const openModals = document.querySelectorAll('.modal.show');
+        const modalIndex = openModals.length;
+        const baseZIndex = 1050 + (modalIndex * 20);
+        modal.style.setProperty('z-index', (baseZIndex + 10).toString(), 'important');
+      }
+    });
+
+    document.addEventListener('shown.bs.modal', function(e) {
+      const openModals = Array.from(document.querySelectorAll('.modal.show'));
+      const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
+
+      backdrops.forEach(function(backdrop, index) {
+        const backdropZ = 1050 + (index * 20);
+        backdrop.style.setProperty('z-index', backdropZ.toString(), 'important');
+      });
+
+      openModals.forEach(function(modal, index) {
+        const modalZ = 1055 + (index * 20);
+        modal.style.setProperty('z-index', modalZ.toString(), 'important');
+      });
+    });
+
+    document.addEventListener('hidden.bs.modal', function() {
+      const openModals = document.querySelectorAll('.modal.show');
+      if (openModals.length > 0) {
+        document.body.classList.add('modal-open');
       }
     });
 

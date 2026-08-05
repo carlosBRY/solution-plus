@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ModePaiement;
 use App\Enums\StatutVente;
+use App\Models\AjustementCredit;
 use App\Models\Client;
 use App\Models\CompteFinancier;
 use App\Models\Paiement;
@@ -131,6 +132,74 @@ class ClientCreditService
             }
 
             return $reglement->load('client', 'user', 'compteFinancier');
+        });
+    }
+
+    /**
+     * Ajoute un crédit (dette) à un client sans passer par une vente.
+     * Accessible aux Administrateurs et Gérants.
+     */
+    public function ajouterCredit(Client $client, User $user, array $data): AjustementCredit
+    {
+        $montant = (float) $data['montant'];
+
+        if ($montant <= 0) {
+            throw ValidationException::withMessages([
+                'montant' => 'Le montant du crédit doit être supérieur à zéro.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($client, $user, $data, $montant) {
+            $clientLock = Client::where('id', $client->id)->lockForUpdate()->first();
+            $soldeAvant = (float) $clientLock->solde;
+            $soldeApres = $soldeAvant + $montant;
+
+            $clientLock->update(['solde' => $soldeApres]);
+
+            return AjustementCredit::create([
+                'client_id' => $clientLock->id,
+                'user_id' => $user->id,
+                'type' => 'AJOUT',
+                'montant' => $montant,
+                'solde_avant' => $soldeAvant,
+                'solde_apres' => $soldeApres,
+                'motif' => $data['motif'],
+                'date' => $data['date'] ?? now(),
+            ]);
+        });
+    }
+
+    /**
+     * Ajuste (corrige) le solde d'un client en cas d'erreur.
+     * Réservé exclusivement aux Administrateurs.
+     */
+    public function ajusterCredit(Client $client, User $user, array $data): AjustementCredit
+    {
+        $nouveauSolde = (float) $data['nouveau_solde'];
+
+        if ($nouveauSolde < 0) {
+            throw ValidationException::withMessages([
+                'nouveau_solde' => 'Le nouveau solde ne peut pas être négatif.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($client, $user, $data, $nouveauSolde) {
+            $clientLock = Client::where('id', $client->id)->lockForUpdate()->first();
+            $soldeAvant = (float) $clientLock->solde;
+            $difference = $nouveauSolde - $soldeAvant;
+
+            $clientLock->update(['solde' => $nouveauSolde]);
+
+            return AjustementCredit::create([
+                'client_id' => $clientLock->id,
+                'user_id' => $user->id,
+                'type' => 'AJUSTEMENT',
+                'montant' => $difference,
+                'solde_avant' => $soldeAvant,
+                'solde_apres' => $nouveauSolde,
+                'motif' => $data['motif'],
+                'date' => $data['date'] ?? now(),
+            ]);
         });
     }
 }

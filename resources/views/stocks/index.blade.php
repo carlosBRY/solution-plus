@@ -210,7 +210,7 @@
     </div>
 
     {{-- Modal Ajustement --}}
-    @can('gérer-stocks')
+    @canany(['gérer-stocks', 'ajuster-stock'])
     <div class="modal fade" id="modalAjuster" tabindex="-1" aria-labelledby="modalAjusterLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -254,23 +254,26 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const modalAjuster = document.getElementById('modalAjuster');
-        modalAjuster.addEventListener('show.bs.modal', function (event) {
-            const btn = event.relatedTarget;
-            const produitId  = btn.dataset.produitId;
-            const produitNom = btn.dataset.produitNom;
-            const stockActuel = btn.dataset.produitStock;
-            const unite = btn.dataset.produitUnite;
+        if (modalAjuster) {
+            modalAjuster.addEventListener('show.bs.modal', function (event) {
+                const btn = event.relatedTarget;
+                if (!btn) return;
+                const produitId  = btn.dataset.produitId;
+                const produitNom = btn.dataset.produitNom;
+                const stockActuel = btn.dataset.produitStock;
+                const unite = btn.dataset.produitUnite;
 
-            modalAjuster.querySelector('#modalAjusterLabel').innerHTML =
-                '<i class="bi bi-pencil-square me-2 text-primary"></i>Ajuster : ' + produitNom;
-            modalAjuster.querySelector('#ajustStockActuel').textContent = stockActuel + ' ' + unite;
-            modalAjuster.querySelector('#ajustUnite').textContent = '(' + unite + ')';
-            modalAjuster.querySelector('#ajustQuantite').value = stockActuel;
+                modalAjuster.querySelector('#modalAjusterLabel').innerHTML =
+                    '<i class="bi bi-pencil-square me-2 text-primary"></i>Ajuster : ' + produitNom;
+                modalAjuster.querySelector('#ajustStockActuel').textContent = stockActuel + ' ' + unite;
+                modalAjuster.querySelector('#ajustUnite').textContent = '(' + unite + ')';
+                modalAjuster.querySelector('#ajustQuantite').value = stockActuel;
 
-            const form = modalAjuster.querySelector('#formAjuster');
-            form.action = '/stocks/' + produitId + '/ajuster';
-        });
+                const form = modalAjuster.querySelector('#formAjuster');
+                form.action = '/stocks/' + produitId + '/ajuster';
+            });
+        }
     });
     </script>
-    @endcan
+    @endcanany
 </x-app-layout>
