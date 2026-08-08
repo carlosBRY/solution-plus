@@ -411,3 +411,44 @@ test('peut choisir une date specifique pour une vente', function () {
     $vente = Vente::latest('id')->first();
     expect($vente->date->format('Y-m-d H:i:s'))->toBe($dateChoisie);
 });
+
+test('peut modifier le prix de vente lors de la vente sans changer le prix de la fiche produit', function () {
+    $user = User::factory()->create();
+    $user->assignRole('Vendeur');
+    $produit = Produit::factory()->create(['unite_base' => 'BOUTEILLE', 'prix_vente' => 10000]);
+    Stock::create(['produit_id' => $produit->id, 'quantite' => 20]);
+    $cond = Conditionnement::factory()->create(['produit_id' => $produit->id, 'prix_vente' => 10000]);
+
+    $prixPersonnalise = 8500;
+
+    $response = $this->actingAs($user)->post(route('ventes.store'), [
+        'mode_paiement' => ModePaiement::ESPECES->value,
+        'montant_paye' => $prixPersonnalise * 2,
+        'items' => [
+            [
+                'produit_id' => $produit->id,
+                'conditionnement_id' => $cond->id,
+                'quantite_conditionnement' => 2,
+                'prix' => $prixPersonnalise,
+            ],
+        ],
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionMissing('error');
+
+    // 1. Le détail de vente utilise le prix personnalisé
+    $vente = Vente::latest('id')->first();
+    $detail = $vente->details->first();
+    expect((float) $detail->prix)->toBe(8500.0);
+    expect((float) $detail->total)->toBe(17000.0); // 2 x 8500
+
+    // 2. Le total de la vente reflète le prix personnalisé
+    expect((float) $vente->total)->toBe(17000.0);
+
+    // 3. Le prix de vente de la fiche produit n'a PAS changé
+    expect((float) $produit->fresh()->prix_vente)->toBe(10000.0);
+
+    // 4. Le prix de vente du conditionnement n'a PAS changé
+    expect((float) $cond->fresh()->prix_vente)->toBe(10000.0);
+});

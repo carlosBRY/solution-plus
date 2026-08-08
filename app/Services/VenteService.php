@@ -95,8 +95,11 @@ class VenteService
                     }
                 }
 
-                // Prix de vente fixé selon le paramétrage DB (non modifiable)
-                $prixVente = (float) ($conditionnement->prix_vente ?? ($produit->prix_vente * $coeff));
+                // Prix de vente : utilise le prix saisi lors de la vente (modifiable) ou le prix paramétré par défaut
+                $prixDefaut = (float) ($conditionnement->prix_vente ?? ($produit->prix_vente * $coeff));
+                $prixVente = isset($item['prix']) && is_numeric($item['prix']) && (float) $item['prix'] > 0
+                    ? (float) $item['prix']
+                    : $prixDefaut;
 
                 $remiseLigne = (float) ($item['remise'] ?? 0);
                 $totalLigne = max(0, ($quantiteCond * $prixVente) - $remiseLigne);

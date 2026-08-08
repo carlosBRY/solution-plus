@@ -42,7 +42,7 @@
                 <div class="panel mb-3">
                     <div class="panel-header d-flex justify-content-between align-items-center">
                         <h2 class="h5 mb-0 section-title"><i class="bi bi-cart3 me-2"></i>Panier d'Achat</h2>
-                        <small class="text-muted"><i class="bi bi-lock me-1"></i>Prix de vente fixes paramétrés</small>
+                        <small class="text-muted"><i class="bi bi-pencil me-1"></i>Prix modifiables sans changer la fiche produit</small>
                     </div>
 
                     <div id="itemsContainer">
@@ -82,7 +82,7 @@
                                 </div>
                                 <div class="col-6 col-md-2">
                                     <label class="form-label small fw-semibold">Prix Unit. (FCFA)</label>
-                                    <input class="form-control form-control-sm prix-input bg-light text-end fw-semibold" type="number" step="0.01" name="items[0][prix]" value="0" readonly title="Prix fixe paramétré">
+                                    <input class="form-control form-control-sm prix-input text-end fw-semibold" type="number" step="0.01" name="items[0][prix]" value="0" min="0" title="Modifiable pour cette vente uniquement">
                                 </div>
                                 <div class="col-12 col-md-2 text-end">
                                     <label class="form-label small fw-bold text-success d-block">Total Ligne</label>
@@ -414,6 +414,10 @@
                     qteInput.addEventListener('input', updateCalculs);
                 }
 
+                if (prixInput) {
+                    prixInput.addEventListener('input', updateCalculs);
+                }
+
                 if (produitSelect.value) {
                     produitSelect.dispatchEvent(new Event('change'));
                 }
@@ -450,7 +454,7 @@
                         </div>
                         <div class="col-6 col-md-2">
                             <label class="form-label small fw-semibold">Prix Unit. (FCFA)</label>
-                            <input class="form-control form-control-sm prix-input bg-light text-end fw-semibold" type="number" step="0.01" name="items[${itemIndex}][prix]" value="0" readonly title="Prix fixe paramétré">
+                            <input class="form-control form-control-sm prix-input text-end fw-semibold" type="number" step="0.01" name="items[${itemIndex}][prix]" value="0" min="0" title="Modifiable pour cette vente uniquement">
                         </div>
                         <div class="col-12 col-md-2 text-end">
                             <label class="form-label small fw-bold text-success d-block">Total Ligne</label>
